@@ -1,0 +1,28 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Tool sessions and traffic exports may contain credentials
+*.har
+*.pcap
+*.pcapng
+*.session
+*.log
+burp-*.xml
+zap-*.xml
+
+# IDE/OS/system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.venv/
+__pycache__/
+*.pyc
+
+# Archive/output artifacts
+*.zip
+tmp/
