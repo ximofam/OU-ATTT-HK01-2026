@@ -108,16 +108,4 @@ Mỗi người chỉ sửa thư mục `labs/0X-.../` và file `tests/security/te
 - [ ] Có hướng dẫn reset dữ liệu và demo trong tối đa 10 phút.
 - [ ] Người khác review và xác nhận tính tái hiện.
 
-## 8. Đưa lên GitHub
 
-Sau khi giải nén repo và tạo repository trống trên GitHub:
-
-~~~bash
-git init -b main
-git add .
-git commit -m "chore: initialize crAPI security lab"
-git remote add origin https://github.com/USERNAME/REPO.git
-git push -u origin main
-~~~
-
-Thay `USERNAME/REPO` bằng repository thực tế. Không push nếu chưa kiểm tra nội dung để tránh commit nhầm dữ liệu nhạy cảm.
