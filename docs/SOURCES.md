@@ -1,9 +1,12 @@
-# Nguồn tham khảo chính
+# Tài liệu tham khảo chính thức
 
-- [OWASP Juice Shop — giới thiệu và Docker](https://devguide.owasp.org/en/07-training-education/01-vulnerable-apps/01-juice-shop/)
-- [OWASP Juice Shop — Companion Guide](https://pwning.owasp-juice.shop/companion-guide/latest/)
-- [OWASP Juice Shop — Hướng dẫn challenge phục vụ demo](https://pwning.owasp-juice.shop/companion-guide/latest/part4/trainers.html)
+- [OWASP crAPI — Repository](https://github.com/OWASP/crAPI)
+- [OWASP crAPI — Setup](https://github.com/OWASP/crAPI/blob/main/docs/setup.md)
+- [OWASP crAPI — Challenges](https://github.com/OWASP/crAPI/blob/develop/docs/challenges.md)
+- [OWASP API Security Top 10 (2023)](https://api-security.owasp.org/editions/2023/en/0x11-t10/)
+- [OWASP Web Security Testing Guide](https://wstg.owasp.org/)
+- [OWASP ASVS](https://asvs.owasp.org/)
+- [Burp Suite — Documentation](https://portswigger.net/burp/documentation)
 - [OWASP ZAP — Getting Started](https://www.zaproxy.org/getting-started/)
-- [PortSwigger Burp Suite — Documentation](https://portswigger.net/burp/documentation)
 
-Ghi URL, ngày truy cập, phiên bản công cụ và ghi chú kết quả thực nghiệm thực tế khi viết báo cáo.
+Trong báo cáo, ghi **ngày truy cập**, **phiên bản crAPI** và phân biệt rõ kết quả của nhóm với tài liệu tham khảo.

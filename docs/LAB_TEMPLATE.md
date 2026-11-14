@@ -1,55 +1,61 @@
-# LAB-XX — Tên lỗ hổng
+# LAB-0X — [Tên lỗ hổng]
 
-## 1. Mục tiêu
+## 1. Mục tiêu và phạm vi
 
-- Lỗ hổng cần kiểm tra:
-- Tác động cần chứng minh:
-- Challenge OWASP Juice Shop:
+- OWASP API Security category:
+- crAPI challenge:
+- Tác động cần kiểm chứng:
 
 ## 2. Lý thuyết
 
 - Khái niệm:
-- Nguyên nhân:
-- Tác động:
+- Nguyên nhân thường gặp:
+- Biện pháp phòng chống:
 
-## 3. Môi trường
+## 3. Môi trường thực nghiệm
 
-- Image/tag hoặc digest Juice Shop:
-- Công cụ sử dụng và phiên bản:
-- Dữ liệu/tài khoản thử nghiệm cần chuẩn bị:
+- Git commit hoặc phiên bản crAPI:
+- Công cụ, phiên bản:
+- Tài khoản thử nghiệm/điều kiện ban đầu (không ghi credentials):
 
-## 4. Luồng hoạt động hợp lệ
+## 4. Khảo sát chức năng bình thường
 
-Mô tả hành vi được mong đợi trước khi thực hiện thử nghiệm.
+- Mục đích nghiệp vụ của API:
+- Endpoint và method liên quan:
+- Request/response hợp lệ:
 
-## 5. Các bước tái hiện
+## 5. Phương pháp kiểm thử
 
-1. Chuẩn bị môi trường.
-2. Chuẩn bị dữ liệu thử.
-3. Thực hiện hành vi hợp lệ và ghi nhận kết quả.
-4. Tiến hành kiểm thử trong Lab.
-5. Ghi nhận và giải thích kết quả.
+1. Các bước khởi tạo dữ liệu.
+2. Các bước kiểm thử có kiểm soát trong Lab.
+3. Dấu hiệu để xác nhận hành vi sai quyền/bất thường.
+4. Cách chạy lại bằng test Python.
 
 ## 6. Bằng chứng
 
-Liên kết ảnh chụp, log đã làm sạch hoặc request/response liên quan đặt tại thư mục `evidence/` của Lab.
+Đặt ảnh và request/response đã làm sạch ở thư mục `evidence/` của Lab. Ẩn JWT, token, cookie và dữ liệu cá nhân.
 
-## 7. Phân tích kỹ thuật
+## 7. Phân tích nguyên nhân
 
-- Vị trí/cơ chế phát sinh lỗ hổng:
-- Vì sao cách xử lý hiện tại không an toàn:
+- Điểm kiểm soát bảo mật bị thiếu/sai:
+- Lớp cần khắc phục (API/Service/Database):
 - Phạm vi tác động đã chứng minh:
-- Những điều **chưa** chứng minh:
+- Những điều chưa chứng minh:
 
-## 8. Biện pháp phòng chống
+## 8. Biện pháp khắc phục
 
-- Đề xuất khắc phục:
-- Kiểm thử lại như thế nào sau khi sửa:
+- Cách sửa được đề xuất:
+- Kiểm thử lại sau sửa:
 
-## 9. Kết luận
+## 9. Automated security test
 
-Kết luận ngắn, không khẳng định quá mức so với bằng chứng.
+- File Python test:
+- Tiền điều kiện:
+- Kết quả mong đợi trên vulnerable target:
+- Kết quả thực tế:
+- Ý nghĩa PASS/FAIL/SKIP:
 
-## 10. Tham khảo
+## 10. Kết luận và tham khảo
 
-- Tài liệu chính thức từ OWASP và công cụ liên quan.
+- Kết luận dựa trên bằng chứng:
+- Tài liệu OWASP/API Security/nguồn chính thức:

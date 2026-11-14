@@ -1,28 +1,34 @@
-# Local configuration and secrets
+# Local target source/data; never commit crAPI runtime state
+.runtime/
 .env
 .env.*
 !.env.example
-*.pem
-*.key
 
-# Tool sessions and traffic exports may contain credentials
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Security tool output may contain tokens/session data
 *.har
 *.pcap
 *.pcapng
 *.session
 *.log
+*.pem
+*.key
 burp-*.xml
 zap-*.xml
 
-# IDE/OS/system files
-.DS_Store
-Thumbs.db
+# Editor and OS
 .idea/
 .vscode/
-.venv/
-__pycache__/
-*.pyc
+.DS_Store
+Thumbs.db
 
-# Archive/output artifacts
-*.zip
+# Local scratch / generated artifacts
 tmp/
+*.zip

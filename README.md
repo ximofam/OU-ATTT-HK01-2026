@@ -1,110 +1,123 @@
-# ATTT-2026 — Web Vulnerability Analysis Lab
+# ATTT-2026 — REST API Security Assessment & Hardening
 
-Bài tập lớn môn **An toàn thông tin**: nghiên cứu, phân tích và thực nghiệm các lỗ hổng bảo mật Web trên **OWASP Juice Shop** trong Docker.
+Bài tập lớn An toàn thông tin: **nghiên cứu, khai thác và kiểm chứng các lỗ hổng REST API trên OWASP crAPI** theo OWASP API Security Top 10.
 
-> **Chỉ sử dụng trong môi trường học tập được phép.** Juice Shop là ứng dụng cố ý có lỗ hổng. Compose chỉ mở cổng tại `127.0.0.1`; không triển khai công khai lên Internet.
+> **Chỉ sử dụng trong môi trường được phép.** crAPI cố tình có lỗ hổng. Nhóm chỉ kiểm thử các instance crAPI do chính nhóm triển khai trên máy cá nhân hoặc môi trường có ủy quyền. Không dùng công cụ quét vào website công khai.
 
 ## 1. Điều kiện chuẩn bị
 
-- Docker Engine hoặc Docker Desktop.
-- Docker Compose V2 (lệnh `docker compose`).
-- Một trình duyệt hiện đại.
-- Burp Suite Community, OWASP ZAP nếu cần theo bài thực nghiệm.
+- Git.
+- Docker Engine/Desktop + Docker Compose V2.
+- Python 3.11+ và pip.
+- Burp Suite Community (nên có); OWASP ZAP (tùy bài kiểm thử).
 
-**Lưu ý:** Docker Compose **không bắt buộc** để chạy Juice Shop, nhưng giúp mọi thành viên dùng chung một cấu hình và dễ chạy lại Lab.
+**Lưu ý:** crAPI có nhiều microservices, có thể tốn RAM. Kiểm tra khả năng chạy từ ngày đầu; nếu máy yếu, thử cấu hình minimal do upstream cung cấp.
 
-## 2. Chạy Lab
+## 2. Khởi động crAPI
 
-Từ thư mục gốc repo:
-
-~~~bash
-docker compose pull
-docker compose up -d
-docker compose ps
-~~~
-
-Truy cập: **http://localhost:3000**.
-
-Xem log:
+Repo nhóm **không sao chép hay chỉnh sửa Docker Compose của OWASP crAPI**. Script sẽ tải phiên bản chính thức vào thư mục cục bộ `.runtime/crapi/` (được gitignore) và chạy Compose của upstream.
 
 ~~~bash
-docker compose logs -f juice-shop
+bash scripts/crapi.sh setup    # Clone OWASP/crAPI (một lần)
+bash scripts/crapi.sh up       # Docker Compose up -d
+bash scripts/crapi.sh status   # Xem trạng thái containers
+bash scripts/crapi.sh logs     # Xem log
+bash scripts/crapi.sh down     # Dừng và loại bỏ containers/network
 ~~~
 
-Dừng và loại bỏ container cùng network do Compose tạo:
+Mở ứng dụng: **http://127.0.0.1:8888**. Mail UI thử nghiệm (nếu dùng): **http://127.0.0.1:8025**.
+
+Script cố định giao diện lắng nghe vào `127.0.0.1`. Lệnh `down` không yêu cầu xóa volumes. **Không dùng `down -v` nếu chưa thống nhất việc mất dữ liệu thử nghiệm.**
+
+Lần chạy đầu cần Docker tải các image, có thể mất thời gian. Việc clone upstream chỉ chạy khi gọi `setup` hoặc `up` lần đầu; script **không tự cập nhật** lên commit mới. Ghi commit của crAPI trong tài liệu thực nghiệm để cả nhóm có cùng phiên bản.
+
+**Nếu cần tự chạy thủ công:** Xem [tài liệu cài đặt crAPI chính thức](https://github.com/OWASP/crAPI/blob/main/docs/setup.md). Repo này không cố gắng thay thế hệ thống triển khai của upstream.
+
+## 3. Chuẩn bị Python Security Tests
 
 ~~~bash
-docker compose down
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+pytest -q
 ~~~
 
-Lab dùng dữ liệu thử nghiệm. Không định nghĩa persistent volume; khi container bị xóa, trạng thái thử nghiệm trong container có thể bị mất. Mỗi Lab cần có hướng dẫn thiết lập lại dữ liệu để tái hiện từ đầu.
+**Ban đầu:** 5 security test **được đánh dấu SKIPPED** vì chưa có logic kiểm thử. Đây chỉ là scaffold, **không phải** bộ kiểm thử đã phát hiện được lỗ hổng. Mỗi thành viên triển khai và bỏ dấu skip cho test của mình sau khi đã xác minh cách API hoạt động.
 
-**Tính tái lập:** File dùng image tag `latest` để dễ bắt đầu. Trước ngày nộp, cả nhóm nên thống nhất và cố định cùng **tag hoặc digest** đã chạy thành công; ghi vào báo cáo. Không cập nhật image giữa các buổi tổng duyệt.
+`tests/conftest.py` chỉ cho phép URL trỏ vào `localhost`/`127.0.0.1` để tránh kiểm thử nhầm hệ thống ngoài Lab.
 
-## 3. Cấu trúc repository
+## 4. Phạm vi 5 Lab
+
+| Thành viên | Lab | Challenge crAPI | File test |
+|---|---|---|---|
+| TV1 | BOLA | #1 — Đọc thông tin phương tiện của người khác | `tests/security/test_bola.py` |
+| TV2 | BFLA | #7 — Gọi chức năng xóa video vượt quyền | `tests/security/test_bfla.py` |
+| TV3 | Excessive Data Exposure | #4 — Endpoint làm lộ thông tin nhạy cảm | `tests/security/test_data_exposure.py` |
+| TV4 | Mass Assignment | #8 — Hoàn tiền cho món hàng chưa trả | `tests/security/test_mass_assignment.py` |
+| TV5 | Unauthenticated Access | #14 — Endpoint thiếu kiểm tra xác thực | `tests/security/test_unauthenticated_access.py` |
+
+Đây là các challenge được nêu trong [tài liệu crAPI](https://github.com/OWASP/crAPI/blob/develop/docs/challenges.md). Chọn 5 Lab này nhằm bảo đảm từng người có một mảng nghiên cứu độc lập; thứ tự/khó khăn thực tế có thể thay đổi theo phiên bản upstream.
+
+Mỗi người chỉ sửa thư mục `labs/0X-.../` và file `tests/security/test_...py` của mình. Mỗi người có **môi trường local**, bộ dữ liệu thử và tài khoản giả riêng để tránh xung đột.
+
+## 5. Cấu trúc repository
 
 ~~~text
 .
-├── compose.yaml                      # Khởi động OWASP Juice Shop
-├── README.md                         # Hướng dẫn chung
-├── .gitignore                        # Tránh commit secrets/tool logs
-├── .github/
-│   ├── ISSUE_TEMPLATE/lab-task.md    # Mẫu issue cho mỗi Lab
-│   └── pull_request_template.md      # Checklist khi nộp PR
+├── .github/                    # Issue/PR templates
 ├── docs/
-│   ├── DE_TAI.md                     # Phạm vi và mục tiêu
-│   ├── LAB_TEMPLATE.md               # Form báo cáo dùng chung
-│   └── SOURCES.md                    # Tài liệu chính thức
-├── labs/
-│   ├── 01-sql-injection/
-│   ├── 02-dom-xss/
-│   ├── 03-broken-access-control/
-│   └── 04-sensitive-data-exposure/   # Phương án thêm Lab độc lập
-├── report/README.md                  # Hướng dẫn tổng hợp báo cáo
-└── presentation/README.md            # Hướng dẫn slide và demo
+│   ├── DE_TAI.md               # Phạm vi, mục tiêu
+│   ├── ARCHITECTURE.md         # Kiến trúc thí nghiệm
+│   ├── ROADMAP.md              # Lịch 7 ngày
+│   ├── LAB_TEMPLATE.md         # Mẫu case study
+│   └── SOURCES.md              # Nguồn tham khảo
+├── labs/                       # 5 Lab độc lập
+├── tests/
+│   ├── conftest.py             # Fixture an toàn cho API client
+│   └── security/               # 5 file Python test (scaffold)
+├── scripts/
+│   └── crapi.sh                # Chạy Docker Compose upstream
+├── report/README.md           # Hướng dẫn tổng hợp báo cáo
+├── presentation/README.md     # Hướng dẫn thuyết trình
+├── .env.example
+├── .gitignore
+├── pytest.ini
+├── requirements.txt
+└── README.md
 ~~~
 
-## 4. Phạm vi Lab
+## 6. Quy trình làm việc nhóm
 
-| Thư mục | Challenge Juice Shop | Nội dung |
-|---|---|---|
-| `labs/01-sql-injection` | Login Admin | SQL Injection |
-| `labs/02-dom-xss` | DOM XSS | Cross-Site Scripting |
-| `labs/03-broken-access-control` | View Basket | Truy cập trái quyền |
-| `labs/04-sensitive-data-exposure` | Confidential Document | Lộ tài liệu nhạy cảm |
+1. Tạo GitHub repository **Private** và push bộ khung này.
+2. Thêm 5 thành viên; chốt tên tương ứng TV1–TV5.
+3. Mỗi người tạo branch `lab/bola`, `lab/bfla`, `lab/data-exposure`, `lab/mass-assignment`, `lab/unauthenticated-access`.
+4. Tự thực nghiệm và viết báo cáo theo `docs/LAB_TEMPLATE.md`.
+5. Khi có bằng chứng và test rõ ràng, mở Pull Request vào `main`; có ít nhất một thành viên review.
+6. Tổng hợp báo cáo và slide sau khi các Lab bàn giao.
 
-**Ba Lab đầu** là phạm vi đã ghi trong tài liệu đề tài trước đó; **Lab 04** là phương án mở rộng để nhóm có bốn phần độc lập, cần được nhóm chốt trước khi nộp đề cương.
+Đọc thêm [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Mỗi Lab có thể làm hoàn toàn độc lập bằng **một Juice Shop local riêng**. Không cần tự viết frontend/backend mới. Mỗi Lab phải có lý thuyết, phương pháp, bằng chứng, tác động và đề xuất khắc phục.
+## 7. Định nghĩa hoàn thành một Lab
 
-## 5. Quy trình cộng tác trên GitHub
+- [ ] Có mô tả chức năng bình thường và điểm kiểm tra bảo mật.
+- [ ] Tái hiện được lỗ hổng trên crAPI local; không chỉ sao chép lời giải.
+- [ ] Có HTTP request/response được làm sạch thông tin nhạy cảm.
+- [ ] Giải thích nguyên nhân, tác động và biện pháp phòng chống.
+- [ ] Có ít nhất một security test thực thi được và kết quả thực tế được ghi nhận.
+- [ ] Có hướng dẫn reset dữ liệu và demo trong tối đa 10 phút.
+- [ ] Người khác review và xác nhận tính tái hiện.
 
-1. Tạo **GitHub repository riêng tư** cho nhóm, upload toàn bộ cấu trúc này.
-2. Thêm cả bốn thành viên vào repository.
-3. Mỗi người tạo issue cho Lab của mình bằng mẫu `.github/ISSUE_TEMPLATE/lab-task.md`.
-4. Tạo một branch độc lập, ví dụ: `lab/sql-injection`, `lab/dom-xss`, `lab/access-control`, `lab/sensitive-data`.
-5. Mỗi thành viên **chỉ sửa thư mục Lab của mình**, hạn chế conflict khi làm song song.
-6. Khi hoàn thành, tạo Pull Request vào `main` và nhờ ít nhất một người review.
-7. Các tài liệu chung (`docs/`, `report/`, `presentation/`) được tổng hợp sau khi các Lab có bằng chứng hoàn chỉnh.
+## 8. Đưa lên GitHub
 
-Không commit thông tin đăng nhập thật, JWT, session cookie, Burp project hoặc HAR chứa dữ liệu chưa được ẩn. Ảnh minh họa cũng cần được kiểm tra trước khi đưa lên GitHub.
-
-## 6. Điều kiện hoàn thành một Lab
-
-- [ ] Có hướng dẫn setup và các dữ liệu/điều kiện ban đầu.
-- [ ] Có kịch bản tái hiện từ đầu.
-- [ ] Có ảnh, request/response hoặc DevTools evidence thực tế đã làm sạch.
-- [ ] Giải thích được nguyên nhân và tác động bảo mật.
-- [ ] Có giải pháp phòng chống và test case kiểm tra lại.
-- [ ] Thành viên khác có thể tái hiện trong tối đa 10 phút theo tài liệu.
-
-## 7. Lệnh thường dùng
+Sau khi giải nén repo và tạo repository trống trên GitHub:
 
 ~~~bash
-docker compose up -d             # Khởi động
-docker compose ps                # Xem trạng thái
-docker compose logs juice-shop   # Xem log
-docker compose down              # Dừng và loại bỏ container
+git init -b main
+git add .
+git commit -m "chore: initialize crAPI security lab"
+git remote add origin https://github.com/USERNAME/REPO.git
+git push -u origin main
 ~~~
 
-**Không chạy Active Scan vào website ngoài phạm vi Lab đã được cấp quyền.**
+Thay `USERNAME/REPO` bằng repository thực tế. Không push nếu chưa kiểm tra nội dung để tránh commit nhầm dữ liệu nhạy cảm.

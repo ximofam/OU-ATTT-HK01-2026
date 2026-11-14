@@ -1,19 +1,17 @@
-# Slide và kịch bản demo
+# Slide và demo
 
-## Slide (gợi ý 10–14 trang)
+## Slide gợi ý (12–16 trang)
 
-- Giới thiệu đề tài.
-- Kiến trúc Lab Docker + Juice Shop + Burp/ZAP.
-- Giới thiệu ngắn từng lỗ hổng.
-- Bằng chứng thử nghiệm và kết quả.
-- Nguyên nhân, tác động, phòng chống.
-- Kết luận, giới hạn và tài liệu tham khảo.
+- Mục tiêu, bối cảnh và tiêu chuẩn API Security.
+- Kiến trúc crAPI và môi trường thực nghiệm.
+- 5 Lab: nguyên nhân, kịch bản khai thác, kết quả, phòng chống.
+- Bộ Python Security Tests và kết quả chạy thật.
+- Hạn chế, bài học và kết luận.
 
-## Demo
+## Quy tắc demo
 
-1. Khởi động Juice Shop trên localhost.
-2. Thực hiện lại từng Lab theo `labs/<lab>/README.md`.
-3. Hiển thị kết quả và giải thích ý nghĩa bảo mật.
-4. Có ảnh/video dự phòng từ môi trường thực của nhóm khi demo lỗi.
-
-Không chạy scan ngoài phạm vi được cho phép.
+1. Chạy crAPI trước khi bắt đầu thuyết trình và kiểm tra health.
+2. Mỗi Lab chỉ demo với tài khoản/dữ liệu giả do nhóm tự tạo.
+3. Chuẩn bị ảnh/video dự phòng từ chính môi trường của nhóm.
+4. Không tiết lộ JWT, cookie, thông tin đăng nhập hay dữ liệu thật trên màn hình.
+5. Không khẳng định có bản vá hoạt động nếu chưa thực sự chạy kiểm chứng.

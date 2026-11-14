@@ -1,15 +1,13 @@
 # Báo cáo tổng hợp
 
-Chỉ bắt đầu tổng hợp sau khi từng Lab có báo cáo độc lập và bằng chứng.
-
 ## Đề cương gợi ý
 
-1. Giới thiệu đề tài, mục tiêu và giới hạn.
-2. Môi trường thực nghiệm và các công cụ.
-3. Phương pháp phân tích/khai thác lỗ hổng.
-4. Kết quả từng Lab (tổng hợp từ các thư mục `labs/`).
-5. Kết quả quét OWASP ZAP và giới hạn scanner.
-6. Nguyên nhân, tác động và biện pháp phòng chống.
-7. Kết luận và tài liệu tham khảo.
+1. Giới thiệu và mục tiêu đề tài.
+2. Kiến trúc API Security Lab.
+3. Phương pháp kiểm thử dựa trên OWASP API Security Top 10.
+4. Kết quả 5 Lab (mỗi phần có bằng chứng thực tế).
+5. Thiết kế và kết quả automated security tests.
+6. Phân tích nguyên nhân/tác động/biện pháp khắc phục.
+7. Kết luận, giới hạn và công việc tương lai.
 
-**Quan trọng:** Mỗi kết luận phải khớp bằng chứng thực tế; không chèn ảnh từ Internet như thể đó là kết quả thử nghiệm của nhóm.
+Chỉ ghi “khai thác thành công” nếu có bằng chứng từ Lab của nhóm; kết quả FAIL/PASS/SKIP của từng test phải được giải thích đúng.
