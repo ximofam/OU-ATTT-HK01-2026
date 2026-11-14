@@ -7,5 +7,5 @@ Thành viên muốn làm lab nào thì đổi `[ ]` thành `[x]` và ghi họ t�
 - [x] [LAB-01 — Broken Object Level Authorization (BOLA)](01-bola/README.md) — Thành viên: Gia Thuận
 - [ ] [LAB-02 — Broken Function Level Authorization (BFLA)](02-bfla/README.md) — Thành viên: …
 - [x] [LAB-03 — Excessive Data Exposure](03-data-exposure/README.md) — Thành viên: Quý Trưởng
-- [ ] [LAB-04 — Mass Assignment](04-mass-assignment/README.md) — Thành viên: …
+- [x] [LAB-04 — Mass Assignment](04-mass-assignment/README.md) — Thành viên: Viễn
 - [x] [LAB-05 — Unauthenticated Access](05-unauthenticated-access/README.md) — Thành viên: Hary Nguyenex
