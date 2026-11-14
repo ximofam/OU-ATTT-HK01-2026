@@ -1,8 +1,0 @@
-name: attt-2026-web-security-lab
-
-services:
-  juice-shop:
-    image: bkimminich/juice-shop:latest
-    init: true
-    ports:
-      - "127.0.0.1:3000:3000"

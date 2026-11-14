@@ -1,26 +1,27 @@
 ---
 name: Lab task
-about: Công việc nghiên cứu và thực nghiệm một lỗ hổng
-title: "[LAB-XX] "
+about: Theo dõi một Lab bảo mật API
+title: "[LAB-0X] "
 labels: ""
 assignees: ""
 ---
 
-## Mục tiêu
+## Phạm vi
 
-- Challenge:
-- Loại lỗ hổng:
-- Công cụ sử dụng:
+- Challenge crAPI:
+- OWASP API category:
+- Thành viên phụ trách:
 
 ## Checklist
 
-- [ ] Nghiên cứu lý thuyết.
-- [ ] Setup Lab local.
-- [ ] Tái hiện và lưu bằng chứng.
-- [ ] Phân tích nguyên nhân/tác động.
-- [ ] Đề xuất cách phòng chống.
-- [ ] Hoàn thiện README/case study và demo.
+- [ ] crAPI local đã chạy và dữ liệu thử đã chuẩn bị.
+- [ ] Đã khảo sát và ghi nhận request/response hợp lệ.
+- [ ] Đã tái hiện lỗ hổng và có bằng chứng.
+- [ ] Đã phân tích nguyên nhân và tác động.
+- [ ] Đã viết, chạy và ghi kết quả automated test.
+- [ ] Đã đề xuất mitigation/test case sau sửa.
+- [ ] Hoàn thiện báo cáo, demo và tạo PR.
 
-## Kết quả / blocker
+## Blocker / ghi chú
 
-Ghi ngắn gọn kèm liên kết PR hoặc bằng chứng khi hoàn thành.
+Không chia sẻ credential thật, session token hoặc file traffic chưa làm sạch.
