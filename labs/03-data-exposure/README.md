@@ -5,9 +5,9 @@
 
 ## Cần thực hiện
 
-- [ ] Nghiên cứu nguyên tắc giới hạn dữ liệu trả về từ API.
-- [ ] Khảo sát response schema và dữ liệu cần thiết cho chức năng hợp lệ.
-- [ ] Tìm endpoint liên quan đến challenge chính thức trong local crAPI.
+- [x] Nghiên cứu nguyên tắc giới hạn dữ liệu trả về từ API.
+- [x] Khảo sát response schema và dữ liệu cần thiết cho chức năng hợp lệ.
+- [x] Tìm endpoint liên quan đến challenge chính thức trong local crAPI.
 - [ ] Kiểm chứng dữ liệu thừa hoặc nhạy cảm bị đưa vào response.
 - [ ] Ghi bằng chứng và che mọi thông tin phiên/tài khoản giả lập.
 - [ ] Đề xuất DTO/response filtering và kiểm tra quyền với từng thuộc tính.
