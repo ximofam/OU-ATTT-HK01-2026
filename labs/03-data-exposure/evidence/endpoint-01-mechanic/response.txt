@@ -1,0 +1,22 @@
+{
+  "mechanics": [
+    {
+      "id": 1,
+      "mechanic_code": "TRAC_JHN",
+      "user": {
+        "email": "jhon@example.com",
+        "number": ""
+      }
+    },
+    {
+      "id": 2,
+      "mechanic_code": "TRAC_JME",
+      "user": {
+        "email": "james@example.com",
+        "number": ""
+      }
+    }
+  ],
+  "previous_offset": null,
+  "next_offset": null
+}

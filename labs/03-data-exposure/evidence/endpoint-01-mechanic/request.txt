@@ -1,0 +1,17 @@
+GET /workshop/api/mechanic/ HTTP/1.1
+Host: 127.0.0.1:8888
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0
+Accept: */*
+Accept-Language: en-US,en;q=0.9
+Accept-Encoding: gzip, deflate, br
+Content-Type: application/json
+Authorization: Bearer JWT token
+Referer: http://127.0.0.1:8888/contact-mechanic?VIN=0RHYSTT1B98NS466A
+Connection: keep-alive
+Cookie: csrftoken=IDK; chat_session_id=IDK
+Sec-Fetch-Dest: empty
+Sec-Fetch-Mode: cors
+Sec-Fetch-Site: same-origin
+Priority: u=0
+
+
