@@ -43,6 +43,7 @@ Xác định người dùng hoặc vai trò nào được phép truy cập từn
 
 # Các nhóm thông tin nhạy cảm:
 - Nhóm 1: Thông tin xác thực và bảo mật
+
 + password
 + password_hash
 + access_token
@@ -53,6 +54,7 @@ Xác định người dùng hoặc vai trò nào được phép truy cập từn
 + private_key
 
 - Nhóm 2: Thông tin dạng cá nhân (Personally Identifiable Information - PII)
+
 + email
 + phone
 + address
@@ -63,6 +65,7 @@ Xác định người dùng hoặc vai trò nào được phép truy cập từn
 + location
 
 - Nhóm 3: Thông tin tài chính
+
 + credit_card_number
 + bank_account
 + balance
@@ -71,6 +74,7 @@ Xác định người dùng hoặc vai trò nào được phép truy cập từn
 + billing_address
 
 - Nhóm 4: Thông tin nội bộ và nghiệp vụ
+
 + internal_id
 + admin_notes
 + role
@@ -93,6 +97,7 @@ Xác định người dùng hoặc vai trò nào được phép truy cập từn
 # Công cụ: Burpsuite
 
 # Tài khoản thử nghiệm/điều kiện ban đầu (không ghi credentials):
+
 + Tài khoản 1: Tên người dùng: truong, Email: truong123@gmail
 
 
@@ -174,6 +179,7 @@ Path: /identity/api/v2/vehicle/vehicles
 - Endpoint 7:
 + Request: evidence/endpoint-07-vehicles/request.txt
 + Response: evidence/endpoint-07-vehicles/response.txt
+
 
 
 ## 5. Phương pháp kiểm thử

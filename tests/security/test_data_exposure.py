@@ -198,7 +198,6 @@ def sample_vehicle_id(auth_client: CrAPIClientAdapter) -> str:
 # 7 Test Cases cho 7 Endpoints thuộc LAB-03: Excessive Data Exposure
 # ---------------------------------------------------------------------------
 
-
 @pytest.mark.security
 def test_endpoint_1_mechanic_list_does_not_expose_pii(auth_client: CrAPIClientAdapter) -> None:
     """Endpoint 1: GET /workshop/api/mechanic/"""
@@ -285,4 +284,5 @@ def test_endpoint_7_vehicles_list_does_not_expose_pincode(auth_client: CrAPIClie
 
     assert resp.status_code == 200, (f"Lỗi gọi API ({resp.status_code}): {resp.text}")
 
-    check_exposure(data=resp.json(), endpoint=endpoint, warning_fields={"email", "fullName"}, critical_fields={ "pincode"`, "pin_code", "password", "token", "secret", "available_credit", "availableCredit", "credit",},)
+    check_exposure(data=resp.json(), endpoint=endpoint, warning_fields={"email", "fullName"}, critical_fields={ "pincode", "pin_code", "password", "token", "secret", "available_credit", "availableCredit", "credit",},)
+
