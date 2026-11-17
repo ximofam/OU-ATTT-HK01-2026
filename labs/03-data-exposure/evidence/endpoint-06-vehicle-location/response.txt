@@ -1,0 +1,10 @@
+{
+  "carId": "5c88ff1b-cb64-43b0-bd01-242b3974f0f0",
+  "vehicleLocation": {
+    "id": 2,
+    "latitude": "31.284788",
+    "longitude": "-92.471176"
+  },
+  "fullName": "truong",
+  "email": "truong123@gmail.com"
+}

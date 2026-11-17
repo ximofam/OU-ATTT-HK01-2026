@@ -1,0 +1,15 @@
+{
+  "id": "ppeZNEvZANx2Dqn4MKZWcZ",
+  "title": "hello world",
+  "content": "hello world",
+  "author": {
+    "nickname": "truong",
+    "email": "truong123@gmail.com",
+    "vehicleid": "5c88ff1b-cb64-43b0-bd01-242b3974f0f0",
+    "profile_pic_url": "",
+    "created_at": "2026-11-15T16:45:35.8Z"
+  },
+  "comments": [],
+  "authorid": 8,
+  "CreatedAt": "2026-11-15T16:45:35.8Z"
+}
