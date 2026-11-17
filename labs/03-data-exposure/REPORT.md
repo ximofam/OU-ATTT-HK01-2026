@@ -162,8 +162,6 @@ Path: /identity/api/v2/vehicle/vehicles
 + Endpoint 7:
 
 
-
-
 ## 5. Phương pháp kiểm thử
 
 1. Các bước khởi tạo dữ liệu.
