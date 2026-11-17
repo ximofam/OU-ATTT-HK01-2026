@@ -5,14 +5,14 @@
 
 ## Cần thực hiện
 
-- [ ] Nghiên cứu Mass Assignment và rủi ro client có thể sửa thuộc tính nội bộ.
-- [ ] Tạo tài khoản/đơn hàng giả trong local crAPI.
-- [ ] Khảo sát workflow hoàn tiền hợp lệ và các request liên quan.
-- [ ] Kiểm thử cách API xử lý các thuộc tính không được phép thay đổi.
-- [ ] Ghi lại trước/sau bằng chứng, tránh thao tác dữ liệu ngoài Lab.
-- [ ] Phân tích vì sao Backend tin tưởng dữ liệu client không phù hợp.
-- [ ] Viết test Python xác minh các thuộc tính nhạy cảm do server quản lý.
-- [ ] Đề xuất allowlist fields, authorization và validation nghiệp vụ.
+- [x] Nghiên cứu Mass Assignment và rủi ro client có thể sửa thuộc tính nội bộ.
+- [x] Tạo tài khoản/đơn hàng giả trong local crAPI.
+- [x] Khảo sát workflow hoàn tiền hợp lệ và các request liên quan.
+- [x] Kiểm thử cách API xử lý các thuộc tính không được phép thay đổi.
+- [x] Ghi lại trước/sau bằng chứng, tránh thao tác dữ liệu ngoài Lab.
+- [x] Phân tích vì sao Backend tin tưởng dữ liệu client không phù hợp.
+- [x] Viết test Python xác minh các thuộc tính nhạy cảm do server quản lý.
+- [x] Đề xuất allowlist fields, authorization và validation nghiệp vụ.
 
 ## Đầu ra
 

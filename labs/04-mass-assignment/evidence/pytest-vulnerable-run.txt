@@ -1,0 +1,81 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.8, pytest-9.2.0, pluggy-1.7.0 -- /home/ximofam/MyCodes/ThucHanhMonHoc/OU-ATTT-HK01-2026/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/ximofam/MyCodes/ThucHanhMonHoc/OU-ATTT-HK01-2026
+configfile: pytest.ini
+plugins: anyio-4.16.0
+collecting ... collected 2 items
+
+tests/security/test_mass_assignment.py::test_order_rejects_non_positive_quantity FAILED [ 50%]
+tests/security/test_mass_assignment.py::test_client_cannot_override_protected_refund_fields FAILED [100%]
+
+=================================== FAILURES ===================================
+___________________ test_order_rejects_non_positive_quantity ___________________
+
+api_client = <httpx.Client object at 0x7f947181f770>
+
+    @pytest.mark.security
+    def test_order_rejects_non_positive_quantity(api_client):
+        """A client must not gain credit by ordering a negative quantity."""
+        headers = _signup_and_login(api_client)
+        credit_before, products = _shop_state(api_client, headers)
+        product = products[0]
+    
+        response = api_client.post(
+            "/workshop/api/shop/orders",
+            headers=headers,
+            json={"product_id": product["id"], "quantity": -5},
+        )
+        credit_after, _ = _shop_state(api_client, headers)
+    
+>       assert response.status_code == 400, (
+            "crAPI accepted a negative order quantity instead of rejecting it: "
+            f"HTTP {response.status_code}, credit {credit_before} -> {credit_after}, "
+            f"body={response.text}"
+        )
+E       AssertionError: crAPI accepted a negative order quantity instead of rejecting it: HTTP 200, credit 100.0 -> 150.0, body={"id":9,"message":"Order sent successfully.","credit":150.0}
+E       assert 200 == 400
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/security/test_mass_assignment.py:58: AssertionError
+_____________ test_client_cannot_override_protected_refund_fields ______________
+
+api_client = <httpx.Client object at 0x7f9471568f50>
+
+    @pytest.mark.security
+    def test_client_cannot_override_protected_refund_fields(api_client):
+        """Create a throwaway order, then verify protected fields are server-owned."""
+        headers = _signup_and_login(api_client)
+        _, products = _shop_state(api_client, headers)
+        product = products[0]
+    
+        created = api_client.post(
+            "/workshop/api/shop/orders",
+            headers=headers,
+            json={"product_id": product["id"], "quantity": 1},
+        )
+        assert created.status_code == 200, created.text
+        order_id = created.json()["id"]
+        credit_before, _ = _shop_state(api_client, headers)
+    
+        response = api_client.put(
+            f"/workshop/api/shop/orders/{order_id}",
+            headers=headers,
+            json={"product_id": product["id"], "quantity": 100, "status": "returned"},
+        )
+        credit_after, _ = _shop_state(api_client, headers)
+    
+>       assert response.status_code in {400, 403}, (
+            "client was allowed to update server-owned order fields (quantity/status): "
+            f"HTTP {response.status_code}, credit {credit_before} -> {credit_after}, "
+            f"body={response.text}"
+        )
+E       AssertionError: client was allowed to update server-owned order fields (quantity/status): HTTP 200, credit 90.0 -> 1090.0, body={"orders":{"id":10,"user":{"email":"vien-lab04-466582b324e6@example.com","number":"09627223449"},"product":{"id":2,"name":"Wheel","price":"10.00","image_url":"images/wheel.svg"},"quantity":100,"status":"returned","transaction_id":"1279d47b-3521-48f1-8e05-81027025abc9","created_on":"2026-11-17T17:07:54.210921"}}
+E       assert 200 in {400, 403}
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests/security/test_mass_assignment.py:91: AssertionError
+=========================== short test summary info ============================
+FAILED tests/security/test_mass_assignment.py::test_order_rejects_non_positive_quantity
+FAILED tests/security/test_mass_assignment.py::test_client_cannot_override_protected_refund_fields
+============================== 2 failed in 1.64s ===============================
