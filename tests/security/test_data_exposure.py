@@ -6,8 +6,10 @@ import os
 from typing import Any
 from urllib.parse import urlparse
 
+
 import pytest
 import requests
+import warnings
 
 # Ảnh PNG 1x1 pixel hợp lệ (67 bytes) dùng để test upload avatar mà không cần file ngoài
 MINIMAL_PNG_BYTES = (
@@ -120,20 +122,35 @@ def find_forbidden_keys(
             findings.extend(find_forbidden_keys(item, forbidden_keys, f"{current_path}[{idx}]"))
     return findings
 
+def check_exposure(data: Any, endpoint: str, warning_fields: set[str], critical_fields: set[str]) -> None:
+    """
+    Phân loại kết quả kiểm thử EDE:
+    - PASS: Không phát hiện trường dữ liệu bị cấm.
+    - WARNING: Phát hiện dữ liệu rủi ro thấp/trung bình.
+    - FAILED: Phát hiện dữ liệu rủi ro cao.
+    """
 
-@pytest.fixture(scope="module")
+    warning_leaks = find_forbidden_keys(data, warning_fields)
+    critical_leaks = find_forbidden_keys(data, critical_fields)
+
+    if warning_leaks:
+        warnings.warn(f"[EDE WARNING] {endpoint} "f"phát hiện dữ liệu có rủi ro thấp/trung bình: {warning_leaks}",UserWarning,stacklevel=2,)
+
+    assert not critical_leaks, (f"[EDE HIGH RISK] {endpoint} "f"phát hiện dữ liệu nhạy cảm có rủi ro cao: {critical_leaks}")
+
+@pytest.fixture(scope="function")
 def auth_client(api_client: Any) -> CrAPIClientAdapter:
     """Khởi tạo client đã xác thực cho tài khoản kiểm thử Lab 03."""
     client = CrAPIClientAdapter(api_client)
-    email = os.getenv("CRAPI_TV3_EMAIL", "tv3_data_exposure@example.com")
-    password = os.getenv("CRAPI_TV3_PASSWORD", "Password123!")
-    name = os.getenv("CRAPI_TV3_NAME", "TV3 Lab03 Tester")
-    number = os.getenv("CRAPI_TV3_NUMBER", "9123456780")
+    email = os.environ.get("CRAPI_USER_A_EMAIL", "tv3_data_exposure@example.com")
+    password = os.environ.get("CRAPI_USER_A_PASSWORD", "Password123!")
+    name = os.environ.get("CRAPI_USER_A_NAME", "TV3 Lab03 Tester")
+    number = os.environ.get("CRAPI_USER_A_NUMBER", "9123456780")
     client.authenticate(email=email, password=password, name=name, number=number)
     return client
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def sample_post_id(auth_client: CrAPIClientAdapter) -> str:
     """Lấy ID của một bài viết có sẵn hoặc tự tạo bài viết mẫu nếu diễn đàn đang trống."""
     resp = auth_client.get("/community/api/v2/community/posts/recent")
@@ -160,7 +177,7 @@ def sample_post_id(auth_client: CrAPIClientAdapter) -> str:
     return str(post_id)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def sample_vehicle_id(auth_client: CrAPIClientAdapter) -> str:
     """Lấy vehicle UUID của tài khoản thử nghiệm để kiểm thử endpoint vị trí xe."""
     resp = auth_client.get("/identity/api/v2/vehicle/vehicles")
@@ -181,8 +198,91 @@ def sample_vehicle_id(auth_client: CrAPIClientAdapter) -> str:
 # 7 Test Cases cho 7 Endpoints thuộc LAB-03: Excessive Data Exposure
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.security
-@pytest.mark.skip(reason="TODO TV3:")
 def test_endpoint_1_mechanic_list_does_not_expose_pii(auth_client: CrAPIClientAdapter) -> None:
-    """Create a throwaway order, then verify protected fields are server-owned."""
-    raise NotImplementedError
+    """Endpoint 1: GET /workshop/api/mechanic/"""
+
+    endpoint = "/workshop/api/mechanic/"
+    resp = auth_client.get(endpoint)
+
+    assert resp.status_code == 200, ( f"Lỗi gọi API ({resp.status_code}): {resp.text}")
+
+    check_exposure(data=resp.json(), endpoint=endpoint, warning_fields={"email", "number", "phone", "role"}, critical_fields={"password", "token", "secret", "pincode"},)
+
+
+@pytest.mark.security
+def test_endpoint_2_recent_posts_does_not_expose_author_pii(auth_client: CrAPIClientAdapter) -> None:
+    """Endpoint 2: GET /community/api/v2/community/posts/recent"""
+
+    endpoint = "/community/api/v2/community/posts/recent"
+    resp = auth_client.get(endpoint)
+
+    assert resp.status_code == 200, (f"Lỗi gọi API ({resp.status_code}): {resp.text}")
+
+    check_exposure(data=resp.json(),endpoint=endpoint, warning_fields={"email", "vehicleid", "vehicleId"},critical_fields={"password", "token", "secret", "pincode"},)
+
+
+@pytest.mark.security
+def test_endpoint_3_post_detail_does_not_expose_user_pii(auth_client: CrAPIClientAdapter,sample_post_id: str) -> None:
+    """Endpoint 3: GET /community/api/v2/community/posts/{id}"""
+
+    endpoint = f"/community/api/v2/community/posts/{sample_post_id}"
+    resp = auth_client.get(endpoint)
+
+    assert resp.status_code == 200, (f"Lỗi gọi API ({resp.status_code}): {resp.text}")
+
+    check_exposure(data=resp.json(),endpoint=endpoint,warning_fields={"email", "vehicleid", "vehicleId"},critical_fields={"password", "token", "secret", "pincode"},)
+
+
+@pytest.mark.security
+def test_endpoint_4_post_comment_does_not_expose_user_pii(auth_client: CrAPIClientAdapter, sample_post_id: str) -> None:
+    """Endpoint 4: POST /community/api/v2/community/posts/{id}/comment"""
+
+    endpoint = (f"/community/api/v2/community/posts/{sample_post_id}/comment")
+
+    resp = auth_client.post(endpoint, json={"content": "Automated security check comment for Lab 03."},)
+
+    assert resp.status_code in {200, 201}, ( f"Lỗi gửi comment ({resp.status_code}): {resp.text}")
+
+    check_exposure(data=resp.json(), endpoint=endpoint, warning_fields={"email", "vehicleid", "vehicleId"},critical_fields={"password", "token", "secret", "pincode"},)
+
+
+@pytest.mark.security
+def test_endpoint_5_upload_picture_does_not_expose_financial_info(auth_client: CrAPIClientAdapter) -> None:
+    """Endpoint 5: POST /identity/api/v2/user/pictures"""
+
+    endpoint = "/identity/api/v2/user/pictures"
+
+    files = {"file": ("avatar.png", MINIMAL_PNG_BYTES, "image/png")}
+
+    resp = auth_client.post(endpoint, files=files)
+
+    assert resp.status_code == 200, (f"Lỗi upload ảnh ({resp.status_code}): {resp.text}")
+
+    check_exposure(data=resp.json(), endpoint=endpoint, warning_fields={"email", "number", "phone", "role"}, critical_fields={"available_credit", "availableCredit", "credit", "password", "token", "secret", },)
+
+
+@pytest.mark.security
+def test_endpoint_6_vehicle_location_does_not_expose_owner_pii(auth_client: CrAPIClientAdapter, sample_vehicle_id: str) -> None:
+    """Endpoint 6: GET /identity/api/v2/vehicle/{id}/location"""
+
+    endpoint = (f"/identity/api/v2/vehicle/{sample_vehicle_id}/location")
+
+    resp = auth_client.get(endpoint)
+
+    assert resp.status_code == 200, ( f"Lỗi gọi API ({resp.status_code}): {resp.text}")
+
+    check_exposure(data=resp.json(), endpoint=endpoint, warning_fields={ "fullName", "fullname", "email", "phone", "number", }, critical_fields={"password", "token", "secret", "pincode"},)
+
+
+@pytest.mark.security
+def test_endpoint_7_vehicles_list_does_not_expose_pincode(auth_client: CrAPIClientAdapter) -> None:
+    """Endpoint 7: GET /identity/api/v2/vehicle/vehicles"""
+
+    endpoint = "/identity/api/v2/vehicle/vehicles"
+    resp = auth_client.get(endpoint)
+
+    assert resp.status_code == 200, (f"Lỗi gọi API ({resp.status_code}): {resp.text}")
+
+    check_exposure(data=resp.json(), endpoint=endpoint, warning_fields={"email", "fullName"}, critical_fields={ "pincode"`, "pin_code", "password", "token", "secret", "available_credit", "availableCredit", "credit",},)
