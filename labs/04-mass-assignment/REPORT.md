@@ -218,7 +218,7 @@ Response **`HTTP 200 OK`**, order `15` có `quantity = 1` và `status = "returne
 | Quantity | `1` | `1` | Không đổi |
 | Status | `delivered` | `returned` | Đã đổi theo giá trị client gửi |
 | Credit | `90.0` | `100.0` | Tăng `10.0` |
-| HTTP PUT |: | `200 OK` | Request được chấp nhận |
+| HTTP PUT | không áp dụng | `200 OK` | Request được chấp nhận |
 
 **Kết luận từ ảnh:** Hành vi ghi nhận phù hợp với lỗ hổng sửa thuộc tính `status` và phát sinh hoàn tiền. Chuỗi ảnh không ghi nhận request xác minh trả hàng khác; để khẳng định đầy đủ việc bỏ qua luồng hợp lệ, người thực hiện cần xác nhận không thực hiện Return Order/xác minh trả hàng giữa các mốc trên.
 
