@@ -4,6 +4,10 @@
 
 - Writes requests in Vietnamese; expects responses and explanations in Vietnamese. Confidence: 0.6
 
+## Writing style
+
+- Avoids em dashes (—) in written documents/reports, since they make the text look AI-generated; use colons, commas, or plain wording instead. Confidence: 0.7
+
 ## Workflow
 
 - When the task is already scoped, prefers the agent to carry it out end-to-end instead of pausing to ask permission or offering options ("Làm cho tôi luôn đi"). Confidence: 0.5
