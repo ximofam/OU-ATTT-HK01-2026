@@ -5,13 +5,13 @@
 
 ## Cần thực hiện
 
-- [ ] Nghiên cứu cơ chế xác thực API và khác biệt giữa 401/403.
-- [ ] Khảo sát chức năng hợp lệ cần phải đăng nhập.
+- [x] Nghiên cứu cơ chế xác thực API và khác biệt giữa 401/403.
+- [x] Khảo sát chức năng hợp lệ cần phải đăng nhập.
 - [ ] Kiểm tra request khi có và không có thông tin xác thực trong local crAPI.
 - [ ] Tái hiện challenge và thu thập bằng chứng.
-- [ ] Phân tích nguyên nhân thiếu middleware/kiểm tra xác thực.
-- [ ] Viết test Python xác minh endpoint được bảo vệ từ chối request không có token.
-- [ ] Đề xuất kiểm tra authentication tập trung và test case kiểm chứng.
+- [x] Phân tích nguyên nhân thiếu middleware/kiểm tra xác thực.
+- [x] Viết test Python xác minh endpoint được bảo vệ từ chối request không có token.
+- [x] Đề xuất kiểm tra authentication tập trung và test case kiểm chứng.
 - [ ] Hoàn thiện báo cáo và demo.
 
 ## Đầu ra
