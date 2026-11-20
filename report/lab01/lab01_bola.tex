@@ -1,0 +1,314 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage[a4paper, margin=2.2cm]{geometry}
+\usepackage{fontspec}
+\usepackage[vietnamese, english, bidi=basic, provide=*]{babel}
+\babelprovide[import, onchar=ids fonts]{english}
+\babelfont{rm}{Noto Sans}
+\babelfont{tt}{Noto Sans Mono}
+\usepackage{enumitem}
+\setlist[itemize]{label=-}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+\definecolor{accent}{HTML}{1E3A8A}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=accent,
+    urlcolor=accent
+}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE\bfseries\color{accent} LAB-01: Broken Object Level Authorization (BOLA)}\\[0.35em]
+    {\large Khảo sát, khai thác và kiểm thử tự động lỗ hổng truy cập trái phép thông tin vị trí phương tiện trên OWASP crAPI}
+\end{center}
+
+\vspace{0.4em}
+
+\noindent
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+\toprule
+\textbf{Danh mục OWASP} & API1:2023 --- Broken Object Level Authorization (BOLA) \\
+\textbf{Thử thách crAPI} & Challenge \#1 --- Truy cập trái phép thông tin/vị trí phương tiện của người dùng khác \\
+\textbf{Người thực hiện} & Gia Thuận \\
+\textbf{Phiên bản / Nhánh} & Git commit \texttt{700f03d12a392d9e408260b4beae72ed02a4a1a4} (nhánh \texttt{lab/bola}) \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.6em}
+
+\section{Mục tiêu và phạm vi}
+
+\begin{itemize}
+    \item \textbf{OWASP API Security:} API1:2023 --- Broken Object Level Authorization (BOLA).
+    \item \textbf{crAPI Challenge:} Challenge \#1 --- Truy cập trái phép thông tin và tọa độ vị trí phương tiện của người dùng khác thông qua định danh đối tượng (\texttt{vehicle\_id}).
+    \item \textbf{Mục tiêu:} Kiểm chứng khả năng một người dùng đã xác thực hợp lệ (User A) có thể trực tiếp gọi API truy vấn tọa độ vị trí GPS cùng thông tin cá nhân gắn với phương tiện thuộc sở hữu của người dùng khác (User B) bằng cách thay đổi tham số đường dẫn \texttt{\{vehicle\_id\}} trong môi trường lab cục bộ.
+    \item \textbf{Giới hạn:} Thực nghiệm trên 02 tài khoản thử nghiệm độc lập (User A và User B) trong môi trường crAPI local; phạm vi tập trung vào hành vi đọc trái phép dữ liệu (unauthorized read) trên endpoint vị trí phương tiện, chưa kiểm thử các thao tác ghi/điều khiển xe hoặc hệ thống sau khi áp dụng bản vá.
+\end{itemize}
+
+\section{Lý thuyết}
+
+Broken Object Level Authorization (BOLA) là lỗ hổng kiểm soát truy cập xảy ra khi một API tiếp nhận định danh đối tượng (Object ID) do phía client truyền vào (thông qua tham số đường dẫn, chuỗi truy vấn hoặc nội dung yêu cầu) nhưng không kiểm tra xem người dùng đang thực hiện yêu cầu có quyền sở hữu hoặc quyền truy cập đối với đối tượng cụ thể đó hay không.
+
+Trong OWASP API Security Top 10:2023, lỗ hổng này được xếp ở vị trí số một (\textbf{API1:2023}). Việc người dùng gửi kèm một mã xác thực (JWT token) hợp lệ chỉ chứng minh danh tính của người gọi (Authentication), hoàn toàn không đồng nghĩa với việc người đó được phép truy xuất mọi bản ghi trong hệ thống (Authorization).
+
+\begin{itemize}
+    \item \textbf{Nguyên nhân thường gặp:}
+    \begin{itemize}
+        \item Lập trình viên chỉ kiểm tra trạng thái đăng nhập của phiên làm việc mà bỏ qua bước đối chiếu quyền sở hữu tài nguyên ở tầng nghiệp vụ (\texttt{owner\_id == current\_user\_id}).
+        \item Truy vấn trực tiếp cơ sở dữ liệu chỉ dựa trên \texttt{object\_id} do client cung cấp mà không ràng buộc điều kiện định danh chủ sở hữu.
+        \item Các API công khai vô tình trả về định danh nội bộ của đối tượng (như \texttt{vehicleid}), tạo điều kiện cho kẻ tấn công thu thập chuỗi UUID mục tiêu.
+    \end{itemize}
+    \item \textbf{Tác động và nguyên tắc phòng chống:} Lỗ hổng BOLA dẫn đến rò rỉ dữ liệu nhạy cảm của người dùng khác (vị trí địa lý theo thời gian thực, họ tên, địa chỉ email). Để phòng chống, máy chủ bắt buộc phải trích xuất định danh người dùng từ phiên đã xác thực ở phía server và ràng buộc quyền sở hữu trên mọi thao tác truy xuất đối tượng.
+\end{itemize}
+
+\section{Môi trường thực nghiệm}
+
+Toàn bộ quá trình khảo sát, kiểm thử thủ công và chạy kiểm thử tự động được thực hiện trên hạ tầng cô lập cục bộ với các thông số ghi nhận trong Bảng~\ref{tab:env}.
+
+\begin{table}[htbp]
+\centering
+\caption{Thông số môi trường thực nghiệm và dữ liệu kiểm thử}
+\label{tab:env}
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+\toprule
+\textbf{Thành phần} & \textbf{Cấu hình / Kết quả quan sát} \\
+\midrule
+Ứng dụng & OWASP crAPI (chế độ tối giản \texttt{CRAPI\_MINIMAL=1}: \texttt{crapi-web}, \texttt{crapi-workshop}, \texttt{mailhog}, \texttt{mongodb}, \texttt{postgresdb}) \\
+URL cục bộ & \texttt{http://127.0.0.1:8888} (Web/API) và \texttt{http://127.0.0.1:8025} (MailHog) \\
+Git commit crAPI & \texttt{700f03d12a392d9e408260b4beae72ed02a4a1a4} (nhánh làm việc: \texttt{lab/bola}) \\
+Hệ điều hành \& Ảo hóa & Windows 10 (64-bit), Docker Desktop (WSL 2 backend) \\
+Công cụ khảo sát & Google Chrome DevTools (tab Network --- Fetch/XHR), Git Bash (\texttt{curl}) \\
+Kiểm thử tự động & Python 3.12.3, \texttt{pytest} 9.2.0, \texttt{httpx} 0.28.1, \texttt{python-dotenv} 1.2.4 \\
+Tài khoản User A & Tài khoản thử nghiệm truy vấn chéo; đã kích hoạt 01 phương tiện riêng qua MailHog (UUID xe: \texttt{22a84d75-033d-46b6-9d9f-8a92cf98ffb6}) \\
+Tài khoản User B & Tài khoản chủ sở hữu mục tiêu; đã kích hoạt 01 phương tiện riêng qua MailHog (UUID xe: \texttt{3393b735-bb2b-4ecd-bfca-94055df20814}) và đăng 01 bài viết công khai (\texttt{"Test post B"}) trên Community \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Khảo sát chức năng bình thường}
+
+\subsection{Mục đích nghiệp vụ và các endpoint liên quan}
+
+Chức năng quản lý phương tiện trên crAPI cho phép người dùng đã đăng nhập xem danh sách xe thuộc sở hữu cá nhân và truy vấn tọa độ GPS hiện tại của xe trên bản đồ Dashboard. Các endpoint chính tham gia vào luồng nghiệp vụ gồm:
+
+\begin{itemize}
+    \item \texttt{GET /identity/api/v2/vehicle/vehicles} --- Lấy danh sách phương tiện gắn với tài khoản đang đăng nhập.
+    \item \texttt{GET /identity/api/v2/vehicle/\{vehicle\_id\}/location} --- Truy vấn tọa độ GPS (\texttt{latitude}, \texttt{longitude}) và thông tin chủ sở hữu của phương tiện theo định danh UUID \texttt{\{vehicle\_id\}}.
+    \item \texttt{GET /community/api/v2/community/posts/recent} --- Lấy danh sách bài viết công khai trên diễn đàn Community (endpoint gián tiếp làm lộ định danh xe của tác giả bài viết).
+\end{itemize}
+
+Client gửi kèm mã thông báo xác thực trong HTTP Request Header theo chuẩn \texttt{Authorization: Bearer <JWT\_TOKEN>} cùng tham số đường dẫn \texttt{\{vehicle\_id\}}.
+
+\subsection{Truy vấn thông tin phương tiện hợp lệ của chính chủ (User A)}
+
+Khi User A truy cập Dashboard và tải vị trí phương tiện thuộc sở hữu của chính mình, trình duyệt gửi yêu cầu hợp lệ tới máy chủ:
+
+\begin{verbatim}
+GET /identity/api/v2/vehicle/22a84d75-033d-46b6-9d9f-8a92cf98ffb6/location HTTP/1.1
+Host: 127.0.0.1:8888
+Authorization: Bearer <REDACTED_TOKEN_USER_A>
+\end{verbatim}
+
+Phản hồi thực tế từ máy chủ: \textbf{\texttt{HTTP/1.1 200 OK}}.
+
+\begin{verbatim}
+{
+  "carId": "22a84d75-033d-46b6-9d9f-8a92cf98ffb6",
+  "vehicleLocation": {
+    "id": 2,
+    "latitude": "31.284788",
+    "longitude": "-92.471176"
+  },
+  "fullName": "User A",
+  "email": "<REDACTED_EMAIL>"
+}
+\end{verbatim}
+
+\subsection{Chính sách phân quyền kỳ vọng}
+
+Theo nguyên tắc thiết kế bảo mật chuẩn, endpoint \texttt{/identity/api/v2/vehicle/\{vehicle\_id\}/location} chỉ được phép trả về dữ liệu khi \texttt{\{vehicle\_id\}} thuộc quyền sở hữu của tài khoản tương ứng với JWT token trong header \texttt{Authorization}. Mọi yêu cầu truy vấn tới \texttt{\{vehicle\_id\}} của người dùng khác bắt buộc phải bị từ chối bằng mã trạng thái HTTP \texttt{401}, \texttt{403} hoặc \texttt{404}.
+
+\section{Phương pháp kiểm thử: TC-01}
+
+\subsection{Bước 1: Khởi tạo tài khoản thử nghiệm và dữ liệu ban đầu}
+
+\begin{itemize}
+    \item Khởi động stack Docker crAPI cục bộ tại \texttt{http://127.0.0.1:8888} và hộp thư thử nghiệm MailHog tại \texttt{http://127.0.0.1:8025}.
+    \item Đăng ký lần lượt 02 tài khoản độc lập (\textbf{User A} và \textbf{User B}), truy cập MailHog lấy cặp mã VIN và Pincode để kích hoạt phương tiện riêng cho từng tài khoản.
+    \item Sử dụng phiên đăng nhập của \textbf{User B} đăng một bài viết công khai với nội dung \texttt{"Test post B"} trên diễn đàn \textbf{Community}.
+\end{itemize}
+
+\noindent\textbf{Mục đích:} Thiết lập hai chủ thể người dùng tách biệt với tài nguyên phương tiện độc lập và tạo điểm tiếp xúc dữ liệu công khai trên hệ thống.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{00-user-setup-dashboard.png}
+\caption{Giao diện Dashboard crAPI xác nhận tài khoản thử nghiệm đã kích hoạt phương tiện thành công.}
+\end{figure}
+
+\subsection{Bước 2: Khảo sát luồng công khai và thu thập định danh đối tượng}
+
+\begin{itemize}
+    \item Đăng nhập bằng tài khoản \textbf{User A}, mở Chrome DevTools $\rightarrow$ tab \textbf{Network} $\rightarrow$ bộ lọc \textbf{Fetch/XHR} và truy cập mục \textbf{Community}.
+    \item Quan sát gói tin \texttt{GET /community/api/v2/community/posts/recent}, ghi nhận trường \texttt{vehicleid} của User B (\texttt{3393b735-bb2b-4ecd-bfca-94055df20814}) bị trả về công khai trong đối tượng \texttt{author} của bài viết.
+\end{itemize}
+
+\noindent\textbf{Mục đích:} Chứng minh kẻ tấn công có thể thu thập hợp lệ định danh UUID phương tiện của người dùng khác thông qua API bảng tin công khai.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{01-community-vehicleid-exposure.png}
+\caption{Response từ API Community công khai để lộ \texttt{vehicleid} của User B.}
+\end{figure}
+
+\subsection{Bước 3: Xác minh baseline truy cập hợp lệ trên phương tiện của User A}
+
+\begin{itemize}
+    \item Sử dụng JWT token của User A gửi yêu cầu \texttt{GET} tới đúng UUID phương tiện của User A (\texttt{22a84d75-033d-46b6-9d9f-8a92cf98ffb6}).
+    \item Máy chủ phản hồi \texttt{HTTP 200 OK} với tọa độ và thông tin của User A, xác nhận token của User A đang hoạt động bình thường.
+\end{itemize}
+
+\noindent\textbf{Mục đích:} Thiết lập mốc đối chiếu chuẩn trước khi thay đổi tham số định danh sang đối tượng của người dùng khác.
+
+\subsection{Bước 4: Thực hiện truy vấn chéo đối tượng bằng token của User A}
+
+Sử dụng công cụ dòng lệnh \texttt{curl} gửi yêu cầu truy vấn vị trí phương tiện của \textbf{User B} nhưng đính kèm mã xác thực của \textbf{User A}:
+
+\begin{verbatim}
+GET /identity/api/v2/vehicle/3393b735-bb2b-4ecd-bfca-94055df20814/location HTTP/1.1
+Host: 127.0.0.1:8888
+Authorization: Bearer <REDACTED_TOKEN_USER_A>
+\end{verbatim}
+
+\noindent\textbf{Điểm bất thường cần kiểm tra:} Client sử dụng phiên đăng nhập của User A để yêu cầu đọc dữ liệu của một \texttt{vehicle\_id} không thuộc quyền sở hữu của mình.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{02-bola-unauthorized-vehicle-read.png}
+\caption{Kết quả kiểm chứng qua \texttt{curl} cho thấy User A đọc được tọa độ GPS và email của User B.}
+\end{figure}
+
+\subsection{Bước 5: Quan sát và phân tích phản hồi bất thường}
+
+Thay vì từ chối yêu cầu với mã lỗi phân quyền, máy chủ phản hồi trực tiếp \textbf{\texttt{HTTP/1.1 200 OK}} kèm toàn bộ dữ liệu nhạy cảm của User B:
+
+\begin{verbatim}
+{
+  "carId": "3393b735-bb2b-4ecd-bfca-94055df20814",
+  "vehicleLocation": {
+    "id": 2,
+    "latitude": "31.284788",
+    "longitude": "-92.471176"
+  },
+  "fullName": "User B",
+  "email": "<REDACTED_EMAIL>"
+}
+\end{verbatim}
+
+\subsection{Bước 6: Đối chiếu kết quả kiểm thử}
+
+Bảng~\ref{tab:comparison} tổng hợp sự đối chiếu giữa hành vi truy vấn chính chủ và hành vi truy vấn chéo đối tượng ghi nhận trong thực nghiệm.
+
+\begin{table}[htbp]
+\centering
+\caption{Đối chiếu kết quả truy vấn chính chủ và truy vấn chéo đối tượng}
+\label{tab:comparison}
+\begin{tabularx}{\textwidth}{@{} l l l X @{}}
+\toprule
+\textbf{Tiêu chí} & \textbf{Truy vấn chính chủ} & \textbf{Truy vấn chéo (BOLA)} & \textbf{Diễn giải} \\
+\midrule
+Token xác thực & JWT của User A & JWT của User A & Cùng một phiên đăng nhập hợp lệ \\
+Target \texttt{vehicle\_id} & \texttt{22a84d75-...-ffb6} & \texttt{3393b735-...-0814} & Đổi sang UUID xe thuộc User B \\
+HTTP Status kỳ vọng & \texttt{200 OK} & \texttt{401 / 403 / 404} & Chính sách kiểm soát truy cập chuẩn \\
+HTTP Status thực tế & \texttt{200 OK} & \texttt{200 OK} & \textbf{Chấp nhận truy cập trái phép} \\
+Dữ liệu trả về & GPS \& email User A & GPS, tên \& email User B & Rò rỉ vị trí và định danh cá nhân \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent\textbf{Kết luận từ thực nghiệm:} Dữ liệu thực nghiệm khẳng định chắc chắn sự tồn tại của lỗ hổng Broken Object Level Authorization (BOLA) trên endpoint truy vấn vị trí phương tiện.
+
+\section{Kiểm thử tự động (Automated Security Test)}
+
+Để đảm bảo khả năng tái hiện và kiểm thử hồi quy tự động (regression testing) sau khi vá lỗi, nhóm đã xây dựng kịch bản kiểm thử bằng Python.
+
+\begin{itemize}
+    \item \textbf{File kiểm thử:} \texttt{tests/security/test\_bola.py} (hàm \texttt{test\_user\_cannot\_read\_another\_users\_vehicle}, sử dụng fixture \texttt{api\_client} trong \texttt{tests/conftest.py} kết nối tới \texttt{http://127.0.0.1:8888}).
+    \item \textbf{Tiền điều kiện:}
+    \begin{itemize}
+        \item Các container Docker của crAPI đang chạy ở trạng thái \texttt{healthy}.
+        \item Đã cài đặt đầy đủ thư viện từ \texttt{requirements.txt} (\texttt{pytest}, \texttt{httpx}, \texttt{python-dotenv}).
+        \item Hai tài khoản thử nghiệm User A và User B (cấu hình qua các biến môi trường \texttt{CRAPI\_USER\_A\_EMAIL}, \texttt{CRAPI\_USER\_A\_PASSWORD}, \texttt{CRAPI\_USER\_B\_EMAIL}, \texttt{CRAPI\_USER\_B\_PASSWORD} hoặc giá trị mặc định cục bộ) đã được kích hoạt phương tiện riêng.
+    \end{itemize}
+    \item \textbf{Cách thực thi và kết quả mong đợi:} Chạy lệnh \texttt{pytest tests/security/test\_bola.py -v}. Bài kiểm thử khẳng định chính sách an toàn \texttt{assert unauthorized\_resp.status\_code in \{401, 403, 404\}}. Trên hệ thống crAPI chưa vá lỗi, bài test sẽ báo \textbf{\texttt{FAILED}} tại dòng kiểm tra này.
+    \item \textbf{Kết quả thực tế ghi nhận:} Thực thi trên commit \texttt{700f03d12a392d9e408260b4beae72ed02a4a1a4} cho kết quả \texttt{1 failed in 4.05s} (đã ẩn địa chỉ email trong log):
+\end{itemize}
+
+\begin{verbatim}
+tests/security/test_bola.py::test_user_cannot_read_another_users_vehicle FAILED [100%]
+
+AssertionError: BOLA detected: expected 401/403/404 when User A reads User B's vehicle
+(3393b735-bb2b-4ecd-bfca-94055df20814), but got 200:
+{"carId":"3393b735-bb2b-4ecd-bfca-94055df20814",
+ "vehicleLocation":{"id":2,"latitude":"31.284788","longitude":"-92.471176"},
+ "fullName":"User B","email":"<REDACTED_EMAIL>"}
+assert 200 in {401, 403, 404}
+\end{verbatim}
+
+\begin{itemize}
+    \item \textbf{Ý nghĩa các trạng thái PASS / FAIL / SKIP:}
+    \begin{itemize}
+        \item \textbf{\texttt{FAILED}:} Hệ thống mục tiêu đang tồn tại lỗ hổng BOLA --- máy chủ cho phép tài khoản A đọc trái phép tài nguyên phương tiện của tài khoản B (\texttt{HTTP 200}) thay vì từ chối.
+        \item \textbf{\texttt{PASSED}:} Máy chủ đã kiểm tra quyền sở hữu đối tượng đúng chuẩn và từ chối yêu cầu truy cập trái phép bằng mã trạng thái \texttt{401}, \texttt{403} hoặc \texttt{404}.
+        \item \textbf{\texttt{SKIP}:} Bài kiểm thử chưa được kích hoạt hoặc môi trường mục tiêu chưa sẵn sàng để chạy kiểm tra hồi quy.
+    \end{itemize}
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{03-pytest-bola-failed.png}
+\caption{Kết quả chạy kiểm thử tự động \texttt{pytest} phát hiện lỗ hổng BOLA (HTTP 200).}
+\end{figure}
+
+\section{Phân tích nguyên nhân}
+
+\begin{enumerate}
+    \item \textbf{Thiếu kiểm tra quyền sở hữu ở endpoint vị trí xe:} Tại endpoint \texttt{GET /identity/api/v2/vehicle/\{vehicle\_id\}/location}, dịch vụ \texttt{identity-service} chỉ xác thực chữ ký và thời hạn của JWT token (kiểm tra người gọi đã đăng nhập hay chưa) mà hoàn toàn không đối chiếu quyền sở hữu giữa định danh người dùng trong JWT với chủ sở hữu của \texttt{\{vehicle\_id\}} truyền trên URL.
+    \item \textbf{Lộ định danh nội bộ qua API công khai:} Endpoint \texttt{GET /community/api/v2/community/posts/recent} của dịch vụ \texttt{community-service} tuần tự hóa và trả về trường \texttt{vehicleid} của tác giả bài viết ra giao diện công khai, giúp bất kỳ người dùng nào cũng có thể thu thập định danh xe của người khác.
+    \item \textbf{Các lớp kiến trúc cần khắc phục:}
+    \begin{itemize}
+        \item \textit{Tầng Service / Controller (\texttt{identity-service}):} Bắt buộc bổ sung bước xác minh quyền sở hữu tài nguyên trước khi trả dữ liệu vị trí phương tiện.
+        \item \textit{Tầng Database / Repository:} Truy vấn bản ghi phương tiện theo cặp điều kiện kết hợp cả định danh xe và định danh chủ sở hữu.
+        \item \textit{Tầng DTO / Serializer (\texttt{community-service}):} Loại bỏ trường \texttt{vehicleid} khỏi cấu trúc dữ liệu phản hồi của API bảng tin công khai.
+    \end{itemize}
+    \item \textbf{Phạm vi đã chứng minh và chưa chứng minh:} Đã chứng minh người dùng bất kỳ có thể đọc trái phép tọa độ GPS (\texttt{latitude}, \texttt{longitude}), họ tên (\texttt{fullName}) và địa chỉ \texttt{email} của người dùng khác. Chưa kiểm thử các thao tác ghi/sửa/xóa trái phép trên tài nguyên phương tiện khác hoặc kết quả sau khi vá lỗi.
+\end{enumerate}
+
+\section{Biện pháp khắc phục}
+
+\begin{enumerate}
+    \item \textbf{Kiểm tra quyền sở hữu ở tầng nghiệp vụ (\texttt{identity-service}):} Khi tiếp nhận yêu cầu \texttt{GET /identity/api/v2/vehicle/\{vehicle\_id\}/location}, trích xuất định danh người dùng hiện tại (\texttt{currentUserId}) từ \texttt{SecurityContext} / JWT đã xác thực phía server, sau đó đối chiếu với \texttt{owner\_id} của đối tượng \texttt{Vehicle}. Nếu không trùng khớp, từ chối ngay với mã \texttt{403 Forbidden} (hoặc \texttt{404 Not Found} để tránh lộ sự tồn tại của tài nguyên).
+    \item \textbf{Ràng buộc truy vấn ở tầng cơ sở dữ liệu:} Thay thế các truy vấn chỉ tìm kiếm theo \texttt{vehicle\_id} bằng truy vấn gắn liền chủ sở hữu (ví dụ \texttt{findByUuidAndOwnerId(vehicleId, currentUserId)} hoặc mệnh đề \texttt{WHERE uuid = :vehicle\_id AND owner\_id = :current\_user\_id}).
+    \item \textbf{Giảm thiểu dữ liệu lộ lọt (Data Minimization) ở \texttt{community-service}:} Lược bỏ trường \texttt{vehicleid} khỏi đối tượng \texttt{author} trong DTO phản hồi của endpoint \texttt{/community/api/v2/community/posts/recent}.
+    \item \textbf{Kiểm thử lại sau khi sửa (Retest):} Sau khi áp dụng bản vá và khởi động lại dịch vụ \texttt{identity-service}, chạy lại lệnh \texttt{pytest tests/security/test\_bola.py -v}. Bản vá đạt yêu cầu khi endpoint trả về mã HTTP \texttt{403} hoặc \texttt{404}, không rò rỉ dữ liệu vị trí/email của User B, và bài kiểm thử tự động chuyển từ \texttt{FAILED} sang \texttt{PASSED}.
+\end{enumerate}
+
+\section{Kết luận và tham khảo}
+
+\subsection{Kết luận dựa trên bằng chứng}
+
+Qua quá trình khảo sát thực nghiệm và chạy kiểm thử tự động trên OWASP crAPI (commit \texttt{700f03d12a392d9e408260b4beae72ed02a4a1a4}), đã chứng minh chắc chắn sự tồn tại của lỗ hổng \textbf{Broken Object Level Authorization (OWASP API1:2023)} tại endpoint \texttt{GET /identity/api/v2/vehicle/\{vehicle\_id\}/location}. Kết hợp với việc \texttt{GET /community/api/v2/community/posts/recent} để lộ \texttt{vehicleid} của tác giả bài viết, bất kỳ người dùng đã đăng nhập nào cũng có thể thu thập định danh xe và truy xuất trái phép tọa độ GPS cùng địa chỉ email của người dùng khác.
+
+\subsection{Tài liệu tham khảo}
+
+\begin{enumerate}
+    \item OWASP API Security Top 10 (2023) --- \textit{API1:2023 Broken Object Level Authorization}: \url{https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/}
+    \item OWASP crAPI (Completely Ridiculous API) Official Repository \& Challenges Documentation: \url{https://github.com/OWASP/crAPI}
+\end{enumerate}
+
+\end{document}
