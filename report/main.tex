@@ -13,8 +13,8 @@
 \graphicspath{{./}{report/}{../}}
 \usepackage[unicode,hidelinks]{hyperref}
 \usepackage{titlesec}
-\titleformat{\chapter}[display]
-    {\normalfont\bfseries\large}{\chaptername\ \thechapter}{10pt}{\huge}
+\titleformat{\chapter}[hang]
+    {\normalfont\bfseries\Large}{\chaptername\ \thechapter:}{0.5em}{}
 \titlespacing*{\chapter}{0pt}{-10pt}{20pt}
 \titleformat{\section}{\normalfont\bfseries\large}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalfont\bfseries\normalsize}{\thesubsection}{1em}{}
@@ -198,7 +198,7 @@ các thành phần và mối liên hệ tổng quan của hệ thống.
 \begin{figure}[p]
     \centering
     \includegraphics[width=\textwidth,height=0.83\textheight,keepaspectratio]{crapi-architecture.png}
-    \caption{Sơ đồ tổng quan hệ thống OWASP crAPI (hình được cung cấp cho báo cáo).}
+    \caption{Sơ đồ tổng quan hệ thống OWASP crAPI.}
     \label{fig:crapi-architecture}
 \end{figure}
 
