@@ -32,3 +32,6 @@ Thumbs.db
 # Local scratch / generated artifacts
 tmp/
 *.zip
+
+# Local agent state
+.commandcode/
