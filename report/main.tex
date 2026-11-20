@@ -35,9 +35,18 @@
 \setlength{\parskip}{0pt}
 \setlength{\emergencystretch}{2em}
 
-% Điền thông tin thực tế tại đây; không dùng tên mẫu trong template gốc.
-\newcommand{\danhSachSinhVien}{[Họ tên và MSSV các thành viên]}
-\newcommand{\tenGiangVien}{[Tên giảng viên hướng dẫn]}
+% Thông tin thành viên và giảng viên trên bìa.
+\newcommand{\danhSachSinhVien}{%
+    \begin{tabular}{@{}l@{\hspace{1cm}}l@{}}
+        \textbf{Sinh viên thực hiện} & \textbf{MSSV} \\
+        Phạm Đặng Quốc Viễn & 2351010241 \\
+        Phạm Quý Trưởng & 2351010227 \\
+        Nguyễn Bảo Việt & 2351010242 \\
+        Nguyễn An Gia Thuận & 2351010202 \\
+        Cao Thái Phúc & 2254050054
+    \end{tabular}%
+}
+\newcommand{\tenGiangVien}{ThS. Lưu Quang Phương}
 \newcommand{\tenDeTai}{NGHIÊN CỨU VÀ KIỂM THỬ\\BẢO MẬT REST API\\TRÊN OWASP crAPI}
 \newcommand{\namBaoCao}{2026}
 \newcommand{\khungBia}{%
