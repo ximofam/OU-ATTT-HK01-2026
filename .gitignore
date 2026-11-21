@@ -12,6 +12,19 @@ __pycache__/
 .coverage
 htmlcov/
 
+# LaTeX auxiliary files (keep report PDFs tracked)
+*.aux
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.toc
+*.xdv
+*.synctex.gz
+*.bbl
+*.blg
+
 # Security tool output may contain tokens/session data
 *.har
 *.pcap
