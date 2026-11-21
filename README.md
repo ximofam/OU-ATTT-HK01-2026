@@ -51,11 +51,11 @@ pytest -q
 
 | Thành viên | Lab | Challenge crAPI | File test |
 |---|---|---|---|
-| TV1 | BOLA | #1 — Đọc thông tin phương tiện của người khác | `tests/security/test_bola.py` |
-| TV2 | BFLA | #7 — Gọi chức năng xóa video vượt quyền | `tests/security/test_bfla.py` |
-| TV3 | Excessive Data Exposure | #4 — Endpoint làm lộ thông tin nhạy cảm | `tests/security/test_data_exposure.py` |
-| TV4 | Mass Assignment | #8 — Hoàn tiền cho món hàng chưa trả | `tests/security/test_mass_assignment.py` |
-| TV5 | Unauthenticated Access | #14 — Endpoint thiếu kiểm tra xác thực | `tests/security/test_unauthenticated_access.py` |
+| Nguyễn An Gia Thuận | BOLA | #1 — Đọc thông tin phương tiện của người khác | `tests/security/test_bola.py` |
+| Cao Thái Phúc | BFLA | #7 — Gọi chức năng xóa video vượt quyền | `tests/security/test_bfla.py` |
+| Phạm Quý Trưởng | Excessive Data Exposure | #4 — Endpoint làm lộ thông tin nhạy cảm | `tests/security/test_data_exposure.py` |
+| Phạm Đặng Quốc Viễn | Mass Assignment | #8 — Hoàn tiền cho món hàng chưa trả | `tests/security/test_mass_assignment.py` |
+| Nguyễn Bảo Việt | Unauthenticated Access | #14 — Endpoint thiếu kiểm tra xác thực | `tests/security/test_unauthenticated_access.py` |
 
 Đây là các challenge được nêu trong [tài liệu crAPI](https://github.com/OWASP/crAPI/blob/develop/docs/challenges.md). Chọn 5 Lab này nhằm bảo đảm từng người có một mảng nghiên cứu độc lập; thứ tự/khó khăn thực tế có thể thay đổi theo phiên bản upstream.
 
@@ -90,7 +90,7 @@ Mỗi người chỉ sửa thư mục `labs/0X-.../` và file `tests/security/te
 ## 6. Quy trình làm việc nhóm
 
 1. Tạo GitHub repository **Private** và push bộ khung này.
-2. Thêm 5 thành viên; chốt tên tương ứng TV1–TV5.
+2. Thêm 5 thành viên; phân công Lab theo bảng trên và [danh sách đăng ký](labs/README.md).
 3. Mỗi người tạo branch `lab/bola`, `lab/bfla`, `lab/data-exposure`, `lab/mass-assignment`, `lab/unauthenticated-access`.
 4. Tự thực nghiệm và viết báo cáo theo `docs/LAB_TEMPLATE.md`.
 5. Khi có bằng chứng và test rõ ràng, mở Pull Request vào `main`; có ít nhất một thành viên review.

@@ -1,6 +1,6 @@
 % !TeX program = xelatex
 % Biên dịch bằng XeLaTeX; latexmk tự cập nhật mục lục và trích dẫn.
-% Trình bày theo Thesis Template for OU Students; nội dung các chương giữ nguyên.
+% Trình bày theo Thesis Template for OU Students.
 \documentclass[oneside,a4paper,12pt]{extreport}
 \usepackage{lmodern}
 % extreport không hỗ trợ trực tiếp tùy chọn 13pt của template.
@@ -119,31 +119,14 @@
 
 \section{Giới thiệu bài toán}
 
-Trong các ứng dụng web, những thao tác quen thuộc như đăng nhập, xem thông
-tin cá nhân, đặt hàng hay đăng bài thường được thực hiện thông qua API.
-Có thể hiểu API là nơi tiếp nhận yêu cầu từ giao diện, xử lý nghiệp vụ và
-trả lại kết quả. Với REST API, các yêu cầu thường được gửi qua HTTP, còn
-dữ liệu trao đổi thường có dạng JSON.
+REST API tiếp nhận yêu cầu từ ứng dụng, xử lý nghiệp vụ và trả dữ
+liệu, thường qua HTTP và JSON. Máy chủ cần kiểm tra danh tính, quyền
+truy cập và các thuộc tính người dùng được phép đọc hoặc sửa; việc ẩn
+chức năng hay dữ liệu trên giao diện không thay thế kiểm soát tại API.
 
-Ví dụ, khi người dùng chọn xem thông tin một chiếc xe, trình duyệt gửi
-yêu cầu đến API kèm thông tin xác thực và mã định danh của xe. Máy chủ
-cần kiểm tra người gửi là ai, người đó có quyền xem chiếc xe này hay
-không, rồi mới trả về những dữ liệu được phép cung cấp. Nếu chỉ kiểm tra
-người dùng đã đăng nhập mà bỏ qua quyền sở hữu xe, API có thể làm lộ
-thông tin của người khác.
-
-Vấn đề đặt ra là: \textbf{hệ thống có kiểm tra đầy đủ danh tính, quyền
-truy cập và dữ liệu đầu vào cho từng yêu cầu API hay không?} Việc giao
-diện không hiển thị một nút chức năng hoặc một trường dữ liệu chưa đủ
-để bảo đảm an toàn. Người dùng có thể gửi yêu cầu trực tiếp đến API,
-thay đổi mã đối tượng hoặc bổ sung các thuộc tính mà giao diện không
-cho nhập. Vì vậy, những quy tắc bảo mật cần được thực thi ở phía máy chủ.
-
-Trong đề tài này, nhóm nghiên cứu và thực nghiệm các lỗ hổng REST API
-trên OWASP crAPI. Mục tiêu là hiểu cách lỗ hổng xuất hiện, kiểm chứng tác
-động bằng yêu cầu và phản hồi thực tế, từ đó đề xuất biện pháp khắc phục.
-Các bài kiểm thử tự động được sử dụng để hỗ trợ kiểm tra lại hành vi
-bảo mật và giúp người khác tái hiện kết quả.
+Đề tài nghiên cứu các lỗ hổng này trên OWASP crAPI, kiểm chứng bằng
+yêu cầu và phản hồi thực tế, phân tích nguyên nhân và đề xuất khắc
+phục. Bộ kiểm thử Python hỗ trợ tái hiện và kiểm tra lại kết quả.
 
 \section{Mục tiêu và sản phẩm}
 
@@ -175,7 +158,6 @@ Nhóm tập trung vào năm tình huống kiểm thử sau:
     \item \textbf{Unauthenticated Access:} kiểm tra khả năng truy cập
     chức năng cần bảo vệ khi chưa xác thực.
 \end{enumerate}
-
 
 Toàn bộ kiểm thử được giới hạn trong môi trường crAPI cục bộ và dữ liệu
 thử nghiệm do nhóm chuẩn bị. Các phát hiện chỉ được kết luận trong
@@ -210,47 +192,15 @@ các thành phần và mối liên hệ tổng quan của hệ thống.
     \caption{Sơ đồ tổng quan hệ thống OWASP crAPI.}
     \label{fig:crapi-architecture}
 \end{figure}
+\clearpage
 
-\subsection{Giao diện và các dịch vụ xử lý}
-
-Theo sơ đồ, người dùng truy cập ứng dụng qua trình duyệt. Thành phần
-\textbf{Web Application} sử dụng React cho giao diện và Nginx để phục vụ
-ứng dụng, chuyển tiếp các yêu cầu API đến dịch vụ phía sau. Các dịch vụ
-được thể hiện trong sơ đồ gồm:
-
-\begin{itemize}
-    \item \textbf{Identity Service:} phụ trách xác thực và thông tin người
-    dùng, liên quan đến việc xác định danh tính khi truy cập hệ thống.
-    \item \textbf{Workshop Service:} xử lý các nghiệp vụ liên quan đến
-    phương tiện và đơn hàng.
-    \item \textbf{Community Service:} phục vụ các hoạt động cộng đồng như
-    bài đăng và bình luận.
-    \item \textbf{Chatbot Service:} cung cấp chức năng trợ lý AI theo
-    kiến trúc được mô tả trong hình.
-\end{itemize}
-
-Việc tách thành các dịch vụ giúp phân chia trách nhiệm xử lý, nhưng cũng
-đòi hỏi các yêu cầu bảo mật phải được thực hiện nhất quán. Một yêu cầu đã
-đi qua giao diện hoặc có thông tin đăng nhập vẫn cần được kiểm tra quyền
-tại chức năng xử lý tài nguyên tương ứng.
-
-\subsection{Lưu trữ dữ liệu và dịch vụ thư thử nghiệm}
-
-Lớp dữ liệu trong sơ đồ gồm \textbf{MongoDB}, \textbf{PostgreSQL} và
-\textbf{ChromaDB}. Các dịch vụ backend đọc hoặc ghi dữ liệu thông qua
-những thành phần lưu trữ này; ChromaDB được thể hiện là thành phần lưu
-trữ phục vụ Chatbot Service. Người dùng thông thường tương tác với dữ
-liệu thông qua API của ứng dụng.
-
-\textbf{MailHog} là dịch vụ tiếp nhận và hiển thị email trong môi trường
-thử nghiệm, hỗ trợ quan sát các luồng có gửi thư mà không cần gửi email
-đến hộp thư thật.
-
-Sơ đồ trên được dùng để giải thích kiến trúc tổng quan. Thành phần thực
-tế có thể khác giữa các phiên bản crAPI; cấu hình triển khai và commit
-được sử dụng cần được ghi nhận trong phần môi trường thực nghiệm. Sự
-xuất hiện của một thành phần trong sơ đồ không đồng nghĩa thành phần đó
-đã được nhóm kiểm thử hoặc đã được xác nhận có lỗ hổng.
+Giao diện web chuyển tiếp yêu cầu đến các dịch vụ xử lý:
+\textbf{Identity} phụ trách tài khoản và thông tin người dùng,
+\textbf{Workshop} xử lý phương tiện và đơn hàng, còn
+\textbf{Community} phục vụ bài viết và bình luận. Các Lab tập trung
+vào kiểm soát xác thực, phân quyền và dữ liệu tại những API này.
+Sơ đồ chỉ giới thiệu kiến trúc tổng quan, không thể hiện phạm vi
+đã kiểm thử của nhóm.
 
 \section{Môi trường và công cụ}
 
@@ -265,7 +215,7 @@ Các công cụ được sử dụng gồm:
     \item Trình duyệt và DevTools để khảo sát chức năng, quan sát yêu
     cầu API và dữ liệu phản hồi.
     \item Burp Suite Proxy/Repeater hoặc curl để gửi lại, thay đổi yêu
-    cầu và đối chiếu phản hồi. Trong Lab 03, Burp Proxy dùng cổng 8081.
+    cầu và đối chiếu phản hồi.
     \item Python, pytest và HTTP client để kiểm tra các điều kiện bảo
     mật bằng mã. Bằng chứng được lưu trong thư mục của từng Lab.
 \end{itemize}
@@ -291,9 +241,8 @@ Mỗi Lab sử dụng cùng trình tự:
     kiểm thử lại phù hợp.
 \end{enumerate}
 
-Một phản hồi HTTP thành công chưa đủ để kết luận mọi kiểu khai thác.
-Ví dụ, kiểm thử hoàn tiền cần đối chiếu cả trạng thái đơn hàng và số
-dư; kiểm thử xóa video cần kiểm tra tài nguyên sau yêu cầu xóa.
+Với thao tác làm thay đổi dữ liệu, cần kiểm tra trạng thái sau yêu
+cầu thay vì chỉ dựa vào mã HTTP thành công.
 
 \section{Cách đánh giá kết quả}
 
@@ -318,26 +267,20 @@ bộ test, không thay thế việc gọi API trên hệ thống thực tế.
 \chapter{Kết quả thực nghiệm}
 \label{chap:experiments}
 
-Chương này trình bày năm Lab theo cùng cấu trúc: mục tiêu và điều kiện
-kiểm thử, thao tác cùng bằng chứng, kết quả test tự động, nguyên nhân
-và biện pháp khắc phục. Ảnh và kết quả được tổng hợp từ hồ sơ thực
-nghiệm của các thành viên.
+Năm Lab được trình bày theo mục tiêu, bằng chứng, kết quả kiểm thử
+tự động, nguyên nhân và biện pháp khắc phục.
 
 \section{Lab 01: Truy cập trái phép thông tin phương tiện (BOLA)}
 \label{chap:lab01}
 
+\noindent\textbf{Thành viên phụ trách:} Nguyễn An Gia Thuận.
+
 \subsection{Mục tiêu và điều kiện kiểm thử}
 
-Trong crAPI, mỗi tài khoản có thể gắn với một phương tiện và xem vị trí
-của xe trên Dashboard. Dữ liệu này chỉ nên được cung cấp cho chủ xe.
-Lab 01 kiểm tra xem một người đã đăng nhập có thể đọc thông tin xe của
-người khác bằng cách thay mã xe trong yêu cầu API hay không.
-
-Lỗ hổng được khảo sát là \textbf{Broken Object Level Authorization
-(BOLA)}, tức là thiếu kiểm tra quyền truy cập trên từng đối tượng.
-Trong tình huống này, đối tượng là phương tiện~\cite{owasp-bola}. Hệ thống cần kiểm tra
-cả hai điều: người gửi đã đăng nhập và người đó có quyền xem xe được yêu
-cầu. Chỉ kiểm tra đăng nhập là chưa đủ.
+Lab 01 kiểm tra khả năng dùng tài khoản đã đăng nhập để đọc vị trí
+xe của người khác bằng cách thay mã xe trong yêu cầu. Đây là lỗi
+\textbf{Broken Object Level Authorization (BOLA)}: API không kiểm tra
+quyền của người gọi trên đối tượng được yêu cầu~\cite{owasp-bola}.
 
 Hai tài khoản thử nghiệm được chuẩn bị:
 \begin{itemize}
@@ -346,18 +289,14 @@ Hai tài khoản thử nghiệm được chuẩn bị:
     viết trên Community.
 \end{itemize}
 
-
-
 API lấy vị trí xe có dạng:
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
 GET /identity/api/v2/vehicle/{vehicle_id}/location
 \end{Verbatim}
 
-Trong đó, \texttt{vehicle\_id} là mã định danh xe. Yêu cầu gửi kèm token,
-tức mã xác thực của tài khoản đã đăng nhập. Nếu User A yêu cầu xem xe
-của mình, API được phép trả về dữ liệu. Nếu User A yêu cầu xem xe của
-User B, API phải từ chối, chẳng hạn bằng mã \texttt{403 Forbidden} hoặc
-\texttt{404 Not Found}, và không trả dữ liệu của User B.
+\texttt{vehicle\_id} là mã xe. API phải cho phép chủ xe truy cập và
+từ chối tài khoản khác, chẳng hạn bằng \texttt{403} hoặc \texttt{404},
+không kèm dữ liệu xe.
 
 \subsection{Cách kiểm thử và bằng chứng}
 
@@ -393,9 +332,7 @@ Host: 127.0.0.1:8888
 Authorization: Bearer <REDACTED_TOKEN_USER_A>
 \end{Verbatim}
 
-Điểm cần kiểm tra là \textbf{người gửi là User A, còn xe được yêu cầu
-thuộc User B}. Việc biết mã xe không có nghĩa là User A được quyền xem
-thông tin xe đó.
+Yêu cầu giữ token User A nhưng sử dụng mã xe thuộc User B.
 
 \subsubsection{Quan sát phản hồi}
 
@@ -422,10 +359,8 @@ của xe User B:
     \label{fig:bola-response}
 \end{figure}
 
-Kết quả này cho thấy User A đọc được tọa độ vị trí, tên và email gắn với
-xe của User B. Đây là hành vi truy cập trái phép ở mức đối tượng, xác
-nhận lỗi BOLA trong cặp tài khoản được kiểm thử. Lỗi đã được kiểm chứng
-ở thao tác đọc; chưa có bằng chứng về khả năng sửa, xóa hoặc điều khiển xe.
+User A đọc được tọa độ, tên và email gắn với xe User B, xác nhận
+BOLA ở thao tác đọc; chưa có bằng chứng về khả năng sửa hoặc xóa.
 
 \clearpage
 \subsection{Kết quả kiểm thử tự động}
@@ -458,11 +393,7 @@ E assert 200 in {401, 403, 404}
     \label{fig:bola-test}
 \end{figure}
 
-Ở đây, test thất bại vì hành vi của API vi phạm yêu cầu bảo mật.
-Lỗi đăng nhập hoặc thiếu dữ liệu thử nghiệm cũng có thể khiến test
-thất bại, nhưng không phải bằng chứng BOLA. Ngược lại, test PASS chỉ
-cho biết yêu cầu chéo bị từ chối theo điều kiện hiện có; cần kiểm tra
-thêm quyền truy cập chính chủ trước khi kết luận bản vá đạt yêu cầu.
+FAIL trong lần chạy này do API trả dữ liệu xe của tài khoản khác.
 
 \clearpage
 \subsection{Nguyên nhân và biện pháp khắc phục}
@@ -479,9 +410,8 @@ tiêu dễ hơn. Tuy nhiên, nguyên nhân chính vẫn là thiếu kiểm tra q
 ở API lấy vị trí. Dù mã xe khó đoán hoặc bị ẩn khỏi bảng tin, API vẫn
 phải từ chối người không có quyền.
 
-Trong thực nghiệm, dữ liệu bị đọc trái phép gồm tọa độ vị trí, tên và
-email của chủ xe. Với một hệ thống thực tế, việc lộ những thông tin này
-có thể ảnh hưởng đến quyền riêng tư của người sử dụng.
+Dữ liệu vị trí và thông tin chủ xe bị lộ có thể ảnh hưởng đến quyền
+riêng tư của người sử dụng.
 
 \subsubsection{Biện pháp khắc phục và kết luận}
 
@@ -497,18 +427,15 @@ Biện pháp khắc phục được đề xuất gồm:
     lộ ra, không thay thế việc kiểm tra quyền.
 \end{enumerate}
 
-Sau khi sửa, cần kiểm tra User A vẫn xem được xe của mình nhưng không
-xem được xe User B, đồng thời User B vẫn truy cập được xe của mình.
-Token không hợp lệ phải bị từ chối ở bước xác thực; không nên xem lỗi
-xác thực là bằng chứng đã sửa đúng phân quyền.
-
-Lab 01 ghi nhận API trả dữ liệu xe User B cho phiên User A. Kết quả
-thủ công và ảnh chạy test cùng cho thấy lỗi BOLA ở chức năng lấy vị trí
-xe. Các biện pháp trên mới là đề xuất; chưa có kết quả kiểm thử sau vá.
+Sau khi sửa, cần xác nhận mỗi tài khoản vẫn xem được xe của mình,
+truy cập chéo bị từ chối và token không hợp lệ không được chấp nhận.
+Lab chưa có kết quả kiểm thử sau vá.
 
 \clearpage
 \section{Lab 02: Tài khoản thường gọi được chức năng quản trị (BFLA)}
 \label{chap:lab02}
+
+\noindent\textbf{Thành viên phụ trách:} Cao Thái Phúc.
 
 \subsection{Mục tiêu và điều kiện kiểm thử}
 
@@ -517,12 +444,10 @@ không được sử dụng chức năng quản trị để xóa video của ng�
 Lab này kiểm tra liệu máy chủ có ngăn tài khoản thường gọi API xóa
 video dành cho quản trị viên hay không.
 
-Lỗi được khảo sát là \textbf{Broken Function Level Authorization
-(BFLA)}, tức thiếu kiểm soát quyền thực hiện chức năng, thuộc
-API5:2023~\cite{owasp-bfla}. Khác với Lab 01 tập trung vào quyền trên
-một tài nguyên, Lab 02 kiểm tra quyền sử dụng chức năng đặc quyền.
-Không thể chỉ dựa vào tên đường dẫn có chữ \texttt{admin} để kết luận;
-cần đối chiếu chức năng, quyền của người gọi và kết quả xử lý.
+Lỗi \textbf{Broken Function Level Authorization (BFLA)}, thuộc
+API5:2023, là thiếu kiểm soát quyền thực hiện chức năng đặc
+quyền~\cite{owasp-bfla}. Lab đối chiếu vai trò người gọi với hành vi
+xóa video, thay vì chỉ dựa vào chữ \texttt{admin} trong đường dẫn.
 
 Hai tài khoản thử nghiệm được
 chuẩn bị với vai trò \texttt{ROLE\_USER}: \texttt{testerlab} thực hiện
@@ -553,11 +478,9 @@ Host: 127.0.0.1:8888
 Authorization: Bearer <REDACTED>
 \end{Verbatim}
 
-Ảnh DevTools ghi nhận phản hồi \texttt{HTTP 200}. Giá trị
-\texttt{ok: true} trong ảnh là thuộc tính của đối tượng phản hồi Fetch,
-cho biết HTTP thành công; không phải bằng chứng riêng rằng dữ liệu đã
-bị xóa. Vì vậy, cần kiểm tra thêm trạng thái video sau yêu cầu.
-
+DevTools ghi nhận \texttt{HTTP 200}. Thuộc tính Fetch
+\texttt{ok: true} chỉ cho biết HTTP thành công; trạng thái video
+được kiểm tra riêng bên dưới.
 
 \begin{figure}[htbp]
     \centering
@@ -566,14 +489,12 @@ bị xóa. Vì vậy, cần kiểm tra thêm trạng thái video sau yêu cầu.
     \label{fig:lab2-delete}
 \end{figure}
 
-
 \subsubsection{Kiểm tra dữ liệu sau khi xóa}
 
 Truy vấn cơ sở dữ liệu nối tài khoản chủ video với bảng video hồ sơ.
 Kết quả vẫn có tài khoản \texttt{ownerlab}, nhưng các cột mã video và
 tên video để trống. Kết hợp với dữ liệu mục tiêu đã chuẩn bị, kết quả
 cho thấy video không còn gắn với hồ sơ chủ sở hữu sau yêu cầu DELETE.
-
 
 \begin{figure}[htbp]
     \centering
@@ -582,11 +503,8 @@ cho thấy video không còn gắn với hồ sơ chủ sở hữu sau yêu cầ
     \label{fig:lab2-verify}
 \end{figure}
 
-
-Theo chuỗi thực nghiệm được ghi nhận, tài khoản thường đã gọi thành
-công chức năng quản trị và tác động đến video của tài khoản khác.
-Kết luận chỉ áp dụng cho chức năng xóa video được khảo sát, không suy
-rộng thành quyền truy cập mọi chức năng quản trị.
+Chuỗi bằng chứng cho thấy tài khoản thường thực hiện được chức năng
+quản trị xóa video của tài khoản khác.
 
 \clearpage
 \subsection{Kết quả kiểm thử tự động}
@@ -610,10 +528,6 @@ mã không tồn tại, cần kiểm tra thêm trên một video thử có thậ
 bị từ chối và video còn nguyên, còn ADMIN vẫn xóa được khi có quyền.
 Log PASS hiện có chưa bao phủ hai điều kiện đó.
 
-Lab ghi nhận lỗi BFLA ở chức năng xóa video và một kết quả retest sau
-khi bổ sung phân quyền. Việc ẩn nút quản trị trên giao diện không thay
-thế kiểm tra quyền tại API.
-
 \clearpage
 \subsection{Nguyên nhân và biện pháp khắc phục}
 
@@ -636,28 +550,21 @@ lại được lưu trong \path{labs/02-bfla/evidence/bfla-retest.txt}.
 \section{Lab 03: API trả về dữ liệu không cần thiết (Excessive Data Exposure)}
 \label{chap:lab03}
 
+\noindent\textbf{Thành viên phụ trách:} Phạm Quý Trưởng.
+
 \subsection{Mục tiêu và điều kiện kiểm thử}
 
-Bảng tin cần nội dung bài viết và tên hiển thị của tác giả, nhưng không
-nhất thiết cần email hoặc mã xe của người đó. Nếu máy chủ vẫn gửi những
-trường này về trình duyệt, người dùng có thể đọc chúng trong phản hồi
-API dù giao diện không hiển thị.
-
-Đây là tình huống \textbf{Excessive Data Exposure}, tức API trả về dữ
-liệu nhạy cảm nhiều hơn mức chức năng cần dùng. OWASP gọi nhóm lỗi này
-là API3:2019~\cite{owasp-exposure}. Trong phiên bản 2023, quyền đọc từng
-thuộc tính được xét trong nhóm Broken Object Property Level
+\textbf{Excessive Data Exposure} là việc API trả dữ liệu nhạy cảm
+vượt nhu cầu chức năng, dù giao diện không hiển thị. Nhóm lỗi này
+được gọi là API3:2019~\cite{owasp-exposure}; phiên bản 2023 xét quyền
+đọc thuộc tính trong nhóm Broken Object Property Level
 Authorization~\cite{owasp-property}.
 
-Lab khảo sát bảy API, đối chiếu dữ liệu trả về với nhu cầu của từng
-chức năng. Một trường xuất hiện trong JSON là điểm cần đánh giá, không
-tự động chứng minh mọi trường hợp đều là lỗ hổng nghiêm trọng.
-
-Người thực hiện đăng nhập tài khoản thử nghiệm, thao tác trên các chức
-năng thợ sửa xe, Community, ảnh đại diện và phương tiện. Với mỗi thao
-tác, gửi yêu cầu sang Burp Repeater rồi đối chiếu phản hồi JSON với
-thông tin cần hiển thị. Các yêu cầu trong hồ sơ có thông tin xác thực;
-Lab này không kết luận các API truy cập được khi chưa đăng nhập.
+Nhóm dùng tài khoản đã đăng nhập, gửi lại yêu cầu qua Burp Repeater
+và đối chiếu bảy phản hồi với nhu cầu chức năng. Trường hợp chính là
+Community trả email và mã xe của tác giả khác. Các trường còn lại
+cần được đánh giá theo quyền người nhận; sự xuất hiện của một trường
+không tự chứng minh lỗ hổng. Lab không kiểm tra truy cập chưa xác thực.
 
 \subsection{Cách kiểm thử và bằng chứng}
 
@@ -666,13 +573,9 @@ Lab này không kết luận các API truy cập được khi chưa đăng nhậ
 GET /workshop/api/mechanic/
 \end{Verbatim}
 
-Phản hồi chứa mã thợ sửa xe và đối tượng \texttt{user} gồm
-\texttt{email}, \texttt{number}. Hai email được ghi nhận là
-\texttt{jhon@example.com} và \texttt{james@example.com}; trường
-\texttt{number} đang rỗng. Bằng chứng xác nhận API trả email, chưa chứng
-minh số điện thoại bị lộ. Cần xác định email có phải thông tin liên hệ
-được phép công khai của chức năng này hay không.
-
+Đối tượng \texttt{user} chứa \texttt{email} và \texttt{number} rỗng.
+Cần xác định email có phải thông tin liên hệ được phép công khai;
+bằng chứng chưa cho thấy lộ số điện thoại.
 
 \begin{figure}[htbp]
     \centering
@@ -681,23 +584,16 @@ minh số điện thoại bị lộ. Cần xác định email có phải thông 
     \label{fig:exposure-mechanic}
 \end{figure}
 
-
 \subsubsection{Danh sách và chi tiết bài viết}
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
 GET /community/api/v2/community/posts/recent
 GET /community/api/v2/community/posts/{id}
 \end{Verbatim}
 
-Danh sách bài viết chứa \texttt{email} và \texttt{vehicleid} của tác
-giả, bao gồm cả tài khoản khác người đang đăng nhập. Phản hồi chi tiết
-bài viết cũng chứa hai trường này. Mã xe không phục vụ trực tiếp cho
-việc hiển thị nội dung bài viết, nhưng có thể trở thành đầu vào kiểm
-thử quyền truy cập xe như trong Lab 01.
-
-Trong các phản hồi đã lưu của hai API này, danh sách
-\texttt{comments} đang rỗng; chưa có dữ liệu người bình luận để kết
-luận tại hai yêu cầu đó.
-
+Cả hai API trả \texttt{email} và \texttt{vehicleid} của tác giả,
+bao gồm tài khoản khác người gọi. Mã xe không phục vụ hiển thị bài
+viết và có thể hỗ trợ khai thác BOLA như Lab 01. Danh sách
+\texttt{comments} ở hai phản hồi này đang rỗng.
 
 \begin{figure}[htbp]
     \centering
@@ -706,7 +602,6 @@ luận tại hai yêu cầu đó.
     \label{fig:exposure-recent}
 \end{figure}
 
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth,height=0.52\textheight,keepaspectratio]{labs/03-data-exposure/evidence/endpoint-03-post-detail/post-detail.png}
@@ -714,18 +609,14 @@ luận tại hai yêu cầu đó.
     \label{fig:exposure-detail}
 \end{figure}
 
-
 \clearpage
 \subsubsection{Phản hồi sau khi gửi bình luận}
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
 POST /community/api/v2/community/posts/{id}/comment
 \end{Verbatim}
 
-API trả lại bài viết cùng danh sách bình luận. Thông tin tác giả bài
-viết và người bình luận đều có \texttt{email}, \texttt{vehicleid}.
-Như vậy, những trường cần rà soát không chỉ xuất hiện khi đọc bảng tin
-mà còn được gửi lại sau thao tác bình luận.
-
+Phản hồi chứa \texttt{email}, \texttt{vehicleid} của cả tác giả bài
+viết và người bình luận.
 
 \begin{figure}[htbp]
     \centering
@@ -734,17 +625,14 @@ mà còn được gửi lại sau thao tác bình luận.
     \label{fig:exposure-comment}
 \end{figure}
 
-
 \subsubsection{Cập nhật ảnh đại diện}
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
 POST /identity/api/v2/user/pictures
 \end{Verbatim}
 
-Sau khi tải ảnh lên, phản hồi có dữ liệu ảnh và trường
-\texttt{available\_credit = 100.0}. Số dư không cần thiết để xác nhận
-cập nhật ảnh thành công. Đây là số dư của tài khoản đang đăng nhập;
-chưa chứng minh đọc được số dư người khác hoặc thay đổi được số dư.
-
+Phản hồi đổi ảnh trả thêm \texttt{available\_credit = 100.0}, không
+cần cho chức năng này. Đây là số dư của chính người gọi, chưa chứng
+minh lộ số dư người khác hoặc khả năng sửa số dư.
 
 \begin{figure}[htbp]
     \centering
@@ -753,18 +641,14 @@ chưa chứng minh đọc được số dư người khác hoặc thay đổi đ
     \label{fig:exposure-picture}
 \end{figure}
 
-
 \clearpage
 \subsubsection{Vị trí phương tiện}
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
 GET /identity/api/v2/vehicle/{id}/location
 \end{Verbatim}
 
-Ngoài tọa độ, API trả thêm \texttt{fullName} và \texttt{email}. Cần
-đánh giá hai trường này có cần thiết cho chức năng hiển thị bản đồ hay
-không. Yêu cầu được ghi nhận là truy vấn xe của tài khoản thử nghiệm;
-không dùng kết quả này để kết luận đã đọc trái phép xe người khác.
-
+API trả thêm \texttt{fullName}, \texttt{email} bên cạnh tọa độ.
+Yêu cầu dùng xe của chính người gọi, chỉ khảo sát dữ liệu thừa.
 
 \begin{figure}[htbp]
     \centering
@@ -773,18 +657,13 @@ không dùng kết quả này để kết luận đã đọc trái phép xe ngư
     \label{fig:exposure-location}
 \end{figure}
 
-
 \subsubsection{Danh sách phương tiện}
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
 GET /identity/api/v2/vehicle/vehicles
 \end{Verbatim}
 
-Danh sách xe có trường \texttt{pincode}, giá trị \texttt{1080} trong
-dữ liệu thử nghiệm. Mã này cần được kiểm soát chặt hơn các thuộc tính
-mô tả xe như mẫu xe hoặc năm sản xuất. Bộ bằng chứng xác nhận mã xuất
-hiện trong phản hồi, chưa xác nhận có thể dùng mã để chiếm xe hoặc tài
-khoản khác.
-
+Phản hồi chứa \texttt{pincode = 1080}, cần rà soát quyền nhận mã PIN.
+Chưa có bằng chứng dùng mã này để chiếm xe hoặc tài khoản khác.
 
 \begin{figure}[htbp]
     \centering
@@ -828,14 +707,9 @@ Danh sách xe & \texttt{pincode} & FAILED \\
 \end{tabularx}
 \end{table}
 
-WARNING là cảnh báo do test phát ra, không phải trạng thái riêng của
-pytest; test vẫn có thể PASSED nếu chỉ có cảnh báo. FAILED do trường
-bị cấm cần được phân biệt với lỗi đăng nhập, gọi API hoặc thiếu dữ liệu.
-
-Test tìm theo tên trường, kể cả khi giá trị rỗng. Do đó, các nhãn trên
-phản ánh quy tắc của bộ test, không phải kết luận mức độ nghiêm trọng
-chung cho mọi tình huống. Chẳng hạn, nhận số dư của chính mình khi đổi
-ảnh không chứng minh số dư của người khác bị lộ.
+Test tìm theo tên trường, kể cả giá trị rỗng; các nhãn trong bảng
+phản ánh quy tắc kiểm tra, không phải mức độ nghiêm trọng. WARNING
+không làm test thất bại nếu không có điều kiện kiểm tra khác vi phạm.
 
 \clearpage
 \subsection{Nguyên nhân và biện pháp khắc phục}
@@ -845,10 +719,9 @@ năng. Một nguyên nhân có thể là dùng chung cấu trúc phản hồi ho
 toàn bộ đối tượng người dùng. Đây là hướng cần kiểm tra ở lớp tạo JSON;
 hồ sơ chưa xác định dòng mã backend gây ra từng trường hợp.
 
-Trong dữ liệu Community, người dùng nhận thêm email và mã xe của các
-tác giả khác. Những thông tin này có thể hỗ trợ thu thập dữ liệu cá
-nhân hoặc tìm đối tượng để kiểm thử truy cập trái phép. Chưa có bằng
-chứng về chiếm quyền tài khoản hoặc gian lận tiền từ các dữ liệu đã thấy.
+Email và mã xe của tác giả khác có thể hỗ trợ thu thập thông tin cá
+nhân hoặc tìm mục tiêu BOLA; chưa có bằng chứng chiếm quyền tài khoản
+hay gian lận tiền.
 
 Các biện pháp đề xuất gồm:
 \begin{enumerate}
@@ -865,13 +738,13 @@ Các biện pháp đề xuất gồm:
     danh sách trường được phép của từng API.
 \end{enumerate}
 
-Lab ghi nhận các trường cần rà soát ở bảy phản hồi API, trong đó
-Community có thông tin của tác giả khác tài khoản đang đăng nhập.
-Chưa có bản vá hoặc kết quả kiểm thử sau vá trong bộ bằng chứng.
+Lab chưa có bản vá hoặc kết quả kiểm thử sau vá.
 
 \clearpage
 \section{Lab 04: Sửa trạng thái đơn hàng để được hoàn tiền (Mass Assignment)}
 \label{chap:lab04}
+
+\noindent\textbf{Thành viên phụ trách:} Phạm Đặng Quốc Viễn.
 
 \subsection{Mục tiêu và điều kiện kiểm thử}
 
@@ -891,9 +764,8 @@ Khác với Lab 01, người kiểm thử thao tác trên đơn hàng của chí
 Vấn đề cần kiểm tra là quyền thay đổi trạng thái hoàn tiền, không phải
 quyền truy cập đơn hàng của người khác.
 
-Sản phẩm được chọn là Wheel, giá \texttt{10.00}, số lượng \texttt{1}.
-Tài khoản có số dư ban đầu là \texttt{100.0}. Sau khi mua, số dư còn
-\texttt{90.0}; đơn hàng được tạo có mã \texttt{15}.
+Dữ liệu thử gồm một sản phẩm Wheel giá \texttt{10.00}, số lượng
+\texttt{1}, tạo đơn hàng mã \texttt{15}.
 
 Đối chiếu mã nguồn cho thấy chức năng yêu cầu trả hàng đưa đơn về trạng
 thái \texttt{return pending} (chờ xử lý trả hàng). Một hệ thống an toàn
@@ -905,8 +777,7 @@ qua API cập nhật đơn hàng~\cite{crapi-shop}.
 
 \subsubsection{Mua hàng và ghi nhận dữ liệu trước kiểm thử}
 
-Trên giao diện Shop, số dư giảm từ 100 xuống 90 sau khi mua một Wheel
-(Hình~\ref{fig:mass-shop-before} và Hình~\ref{fig:mass-shop-after}).
+Hai ảnh giao diện ghi nhận số dư trước và sau khi mua Wheel.
 
 \begin{figure}[htbp]
     \centering
@@ -934,20 +805,13 @@ Content-Type: application/json
 {"product_id": 2, "quantity": 1}
 \end{Verbatim}
 
-Máy chủ trả \texttt{HTTP 200}, xác nhận mã đơn \texttt{15} và số dư
-\texttt{90.0}. Sau đó, đọc lại dữ liệu bằng hai yêu cầu GET:
-
+Máy chủ trả \texttt{HTTP 200}. Hai yêu cầu đọc lại dữ liệu xác nhận
+số dư \texttt{90.0} và đơn \texttt{15} ở trạng thái
+\texttt{delivered} trước khi gửi PUT:
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
 GET /workshop/api/shop/products?limit=30&offset=0
 GET /workshop/api/shop/orders/all?limit=30&offset=0
 \end{Verbatim}
-
-Phản hồi thứ nhất xác nhận số dư \texttt{90.0}. Phản hồi thứ hai xác
-nhận đơn \texttt{15} có số lượng \texttt{1}, trạng thái
-\texttt{delivered} (đã giao). Đây là dữ liệu đối chiếu trước khi sửa
-trạng thái, được đọc từ API thay vì chỉ dựa vào giao diện.
-
-
 
 \begin{figure}[htbp]
     \centering
@@ -981,7 +845,6 @@ Yêu cầu này trực tiếp gán trạng thái đã trả hàng. Nội dung g�
 có thông tin xác minh việc trả hàng. Máy chủ trả \texttt{HTTP 200} và
 phản hồi đơn \texttt{15} với \texttt{status = returned}.
 
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth,height=0.52\textheight,keepaspectratio]{labs/04-mass-assignment/evidence/08-put-status-returned.png}
@@ -992,23 +855,9 @@ phản hồi đơn \texttt{15} với \texttt{status = returned}.
 \clearpage
 \subsubsection{Đọc lại trạng thái và số dư}
 
-Để xác định thay đổi có được lưu thực sự hay không, gửi lại hai yêu cầu
-GET lấy danh sách sản phẩm và đơn hàng. Các trường liên quan trong phản
-hồi được trích như sau; đây là hai phản hồi riêng:
-
-\begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
-// GET products: so du sau PUT
-{"credit": 100.0}
-
-// GET orders/all: don hang sau PUT
-{
-  "id": 15,
-  "product": {"id": 2, "name": "Wheel", "price": "10.00"},
-  "quantity": 1,
-  "status": "returned"
-}
-\end{Verbatim}
-
+Gửi lại hai GET lấy sản phẩm và đơn hàng. Phản hồi xác nhận số dư
+\texttt{100.0}, đơn \texttt{15} có trạng thái \texttt{returned},
+cho thấy thay đổi đã được lưu chứ không chỉ xuất hiện ở phản hồi PUT.
 
 \begin{figure}[htbp]
     \centering
@@ -1035,18 +884,13 @@ trước và sau yêu cầu PUT.
         \toprule
         \textbf{Dữ liệu} & \textbf{Trước PUT} & \textbf{Sau PUT} \\
         \midrule
-        Mã đơn hàng & 15 & 15 \\
-        Sản phẩm & Wheel & Wheel \\
-        Số lượng & 1 & 1 \\
         Trạng thái & \texttt{delivered} & \texttt{returned} \\
         Số dư & 90.0 & 100.0 \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-Cùng một đơn hàng đã đổi trạng thái và tài khoản được cộng lại
-\texttt{10.0}, đúng bằng giá trị đã thanh toán. Hai GET độc lập cho thấy
-thay đổi không chỉ nằm trong phản hồi PUT.
+Tài khoản được cộng lại \texttt{10.0}, bằng giá trị đã thanh toán.
 
 Bộ ảnh ghi nhận kết quả này nhưng chưa xác nhận đầy đủ mọi thao tác
 xen giữa các mốc. Vì vậy, trước khi kết luận đã bỏ qua toàn bộ quy trình
@@ -1061,21 +905,35 @@ một đơn hàng thử, gửi yêu cầu đổi trạng thái rồi dùng hai G
 trạng thái và số dư. Yêu cầu bảo mật là thao tác này không được tự đổi
 trạng thái trả hàng hoặc làm tăng số dư.
 
-Bài kiểm thử trực tiếp chỉ chạy khi chủ động đặt
-\path{CRAPI_LAB04_RUN=1} và cấu hình tài khoản thử nghiệm. Nó tạo một
-đơn hàng có thanh toán và không tự khôi phục dữ liệu. Khi bật chạy trực
-tiếp, lệnh kiểm thử là:
+Bài kiểm thử trực tiếp tạo một đơn hàng có thanh toán và không tự
+khôi phục dữ liệu. Sau khi cấu hình tài khoản thử nghiệm, chạy riêng
+bài kiểm thử này bằng lệnh:
 
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
-CRAPI_LAB04_RUN=1 pytest tests/security/test_mass_assignment.py -m security -v
+CRAPI_LAB04_RUN=1 python -m pytest \
+  tests/security/test_mass_assignment.py::test_client_cannot_override_protected_refund_fields \
+  -v -s --tb=short
 \end{Verbatim}
 
-Khi kiểm tra bộ test ở chế độ không gọi crAPI thật, kết quả là
-\texttt{6 passed, 1 skipped}. Sáu bài kiểm tra mô phỏng xác nhận logic
-test phân biệt được tình huống bị từ chối và tình huống đổi trạng thái
-hoặc tăng tiền trái phép. Bài gọi crAPI thật bị bỏ qua; kết quả này
-không thay thế bằng chứng khai thác thủ công và không chứng minh hệ
-thống đã được vá.
+Hình~\ref{fig:mass-pytest-live} ghi nhận kết quả chạy trên crAPI local:
+đơn hàng \texttt{18} nhận \texttt{HTTP 200} sau PUT, trạng thái chuyển
+từ \texttt{delivered} sang \texttt{returned} và số dư tăng từ
+\texttt{90.0} lên \texttt{100.0}. Test báo \textbf{FAILED} với thông
+báo \texttt{SECURITY\_VIOLATION} vì các thuộc tính do máy chủ quản lý
+đã bị thay đổi trái phép. Đây là kết quả phát hiện lỗ hổng, không phải
+lỗi thiết lập môi trường.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth,height=0.65\textheight,keepaspectratio]{labs/04-mass-assignment/evidence/11-pytest-live-result.png}
+    \caption{Pytest trên crAPI local: đơn 18 đổi trạng thái và số dư tăng sau PUT; test FAILED do phát hiện vi phạm bảo mật.}
+    \label{fig:mass-pytest-live}
+\end{figure}
+
+Đơn \texttt{18} được test tự tạo, độc lập với đơn \texttt{15} ở phần
+thủ công. Kết quả \texttt{1 failed} này là kiểm thử API thực tế; kết
+quả \texttt{6 passed, 1 skipped} trước đó chỉ kiểm tra logic bằng mô
+phỏng và không được dùng làm bằng chứng đã vá lỗi.
 
 \clearpage
 \subsection{Nguyên nhân và biện pháp khắc phục}
@@ -1115,14 +973,11 @@ Sau khi sửa, yêu cầu PUT trực tiếp phải bị từ chối hoặc khôn
 đổi trạng thái và số dư; quy trình trả hàng hợp lệ vẫn phải hoạt động.
 Hiện chưa có bản vá hoặc kết quả kiểm thử sau vá trong hồ sơ Lab.
 
-Kết quả ghi nhận cho thấy API chấp nhận trạng thái do người dùng gửi,
-lưu trạng thái \texttt{returned} và cộng lại tiền cho đơn hàng thử.
-Điểm cần bảo vệ không chỉ là quyền sở hữu đơn hàng mà còn là quyền
-thay đổi từng thuộc tính có ảnh hưởng đến nghiệp vụ hoàn tiền.
-
 \clearpage
 \section{Lab 05: Đọc đơn hàng khi chưa xác thực (Unauthenticated Access)}
 \label{chap:lab05}
+
+\noindent\textbf{Thành viên phụ trách:} Nguyễn Bảo Việt.
 
 \subsection{Mục tiêu và điều kiện kiểm thử}
 
@@ -1140,14 +995,12 @@ nghiệm và mua một sản phẩm để có đơn hàng hợp lệ. Khi mở O
 trên giao diện, trình duyệt gửi token đăng nhập kèm yêu cầu lấy chi tiết.
 Đơn hàng dùng trong bản ghi thủ công có mã 6.
 
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth,height=0.65\textheight,keepaspectratio]{labs/05-unauthenticated-access/evidence/01-shop-order-details-ui.png}
     \caption{Giao diện chi tiết đơn hàng trong phiên đăng nhập hợp lệ.}
     \label{fig:lab5-ui}
 \end{figure}
-
 
 Hai API được dùng để đối chiếu:
 \begin{Verbatim}[breaklines=true,breakanywhere=true,fontsize=\small]
@@ -1186,14 +1039,12 @@ lưu có mã đơn, sản phẩm, số lượng, trạng thái, thông tin ngư�
 thông tin thanh toán. Số thẻ trong dữ liệu thanh toán đã được che một
 phần; không kết luận toàn bộ số thẻ bị lộ.
 
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth,height=0.65\textheight,keepaspectratio]{labs/05-unauthenticated-access/evidence/02-curl-unauthenticated-access.png}
     \caption{Cùng không có token: danh sách đơn hàng trả 401, chi tiết đơn hàng trả 200.}
     \label{fig:lab5-curl}
 \end{figure}
-
 
 \subsubsection{Thay token bằng giá trị không hợp lệ}
 
@@ -1244,7 +1095,6 @@ chi tiết FAILED vì nhận \texttt{200} thay cho \texttt{401}, phù hợp
 với bằng chứng thiếu xác thực. Mã đơn 10 và 11 trong ảnh test khác mã
 6 ở phần thủ công vì test tự tạo đơn hàng riêng.
 
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth,height=0.65\textheight,keepaspectratio]{labs/05-unauthenticated-access/evidence/03-pytest-security-result.png}
@@ -1262,10 +1112,6 @@ lấy chi tiết đơn hàng không có bước kiểm tra JWT, trong khi phươ
 thức tạo, cập nhật và lấy danh sách đơn hàng có kiểm tra này. Cấu hình
 framework cũng chưa đặt yêu cầu đăng nhập mặc định cho mọi API được
 bảo vệ. Vì vậy, phương thức bị bỏ sót vẫn có thể xử lý yêu cầu.
-
-Giao diện luôn tự gửi token có thể khiến lỗi khó nhận ra nếu chỉ kiểm
-tra thao tác thông thường. Khi gửi yêu cầu trực tiếp bằng curl hoặc
-HTTP client, việc thiếu kiểm tra ở máy chủ mới thể hiện rõ.
 
 Tác động đã ghi nhận là đọc được dữ liệu của đơn hàng thử khi chưa
 xác thực. Lab chưa chứng minh người không đăng nhập có thể tạo, sửa
@@ -1287,10 +1133,7 @@ Các biện pháp đề xuất gồm:
     tương tự cho từng HTTP method để tránh bỏ sót.
 \end{enumerate}
 
-Lab ghi nhận chi tiết đơn hàng vẫn được trả về khi không có token
-hoặc token không hợp lệ. Kết quả thủ công và ảnh pytest cùng xác nhận
-bước kiểm tra xác thực bị thiếu ở API này. Chưa có bản vá hoặc kết quả
-kiểm thử sau vá trong bộ bằng chứng.
+Lab chưa có bản vá hoặc kết quả kiểm thử sau vá.
 
 \clearpage
 \chapter{Tổng hợp và kết luận}
@@ -1316,17 +1159,12 @@ tổng hợp kết quả cùng tình trạng kiểm thử lại trong hồ sơ h
 01 --- BOLA & User A đọc được vị trí và thông tin gắn với xe User B. & Ảnh test ghi FAIL do nhận HTTP 200. Chưa có retest sau vá. \\[4pt]
 02 --- BFLA & Tài khoản thường gọi chức năng quản trị xóa video của tài khoản khác. & Có ghi nhận sửa phân quyền và log 1 PASS; test dùng ID không tồn tại. \\[4pt]
 03 --- Data Exposure & Bảy phản hồi chứa các trường cần rà soát; Community trả email và mã xe của tác giả khác. & Có mã test; chưa có log chạy cả bảy bài hoặc retest sau vá. \\[4pt]
-04 --- Mass Assignment & Đơn thử chuyển từ delivered sang returned; số dư tăng từ 90 lên 100 sau chuỗi kiểm thử. & Kiểm tra mô phỏng: 6 PASS, 1 SKIP. Chưa có kết quả test trực tiếp hoặc sau vá. \\[4pt]
+04 --- Mass Assignment & Đơn thử chuyển từ delivered sang returned; số dư tăng từ 90 lên 100 sau chuỗi kiểm thử. & Test trực tiếp: 1 FAIL, báo SECURITY\_VIOLATION trên đơn 18. Chưa có retest sau vá. \\[4pt]
 05 --- Thiếu xác thực & Chi tiết đơn hàng trả HTTP 200 khi thiếu token hoặc token sai. & Ảnh test ghi 2 FAIL, 1 PASS đối chứng. Chưa có retest sau vá. \\
 \bottomrule
 \end{tabularx}
 \end{singlespace}
 \end{table}
-
-Kết quả cho thấy chỉ kiểm tra đăng nhập chưa đủ: cần phân quyền theo
-chức năng, tài nguyên và thuộc tính. Ngược lại, một chức năng xử lý dữ
-liệu đúng vẫn có thể làm lộ thông tin nếu bỏ qua bước xác thực hoặc
-trả về những trường không cần thiết.
 
 \section{Hạn chế và hướng hoàn thiện}
 
@@ -1341,25 +1179,22 @@ Những việc cần hoàn thiện gồm:
     video không bị thay đổi và ADMIN vẫn thực hiện được thao tác hợp lệ.
     \item Với Lab 03, bổ sung log chạy test và chốt danh sách trường
     được phép cho từng chức năng, thay vì kết luận chỉ từ tên trường.
-    \item Với Lab 04, xác nhận không có thao tác trả hàng hoặc xác minh
-    xen giữa các mốc, rồi chạy test trực tiếp trên dữ liệu thử độc lập.
+    \item Với Lab 04, triển khai biện pháp kiểm soát trạng thái hoàn trả
+    và chạy lại test trực tiếp để đối chiếu kết quả trước và sau vá.
     \item Khi triển khai bản vá, chạy lại các yêu cầu không hợp lệ và
     kiểm tra chức năng hợp lệ vẫn hoạt động; lưu kết quả trước và sau sửa.
 \end{itemize}
 
 \section{Kết luận}
 
-Đề tài đã xây dựng năm tình huống khảo sát bảo mật REST API trên
-crAPI, kèm yêu cầu, phản hồi, ảnh thực nghiệm và mã kiểm thử. Các Lab
-minh họa cách lỗi xác thực, phân quyền và xử lý dữ liệu có thể dẫn đến
-đọc thông tin trái phép, sử dụng chức năng đặc quyền hoặc làm sai lệch
-trạng thái nghiệp vụ.
+Qua năm Lab, nhóm thực hành khảo sát API, thiết kế yêu cầu kiểm thử,
+đối chiếu phản hồi và xây dựng kiểm thử tự động. Các kết quả cho thấy
+máy chủ cần kiểm soát đồng thời xác thực, quyền trên chức năng, đối
+tượng và thuộc tính dữ liệu.
 
-Giá trị của kết quả nằm ở việc đối chiếu hành vi thực tế với yêu cầu
-bảo mật và xác định đúng giới hạn bằng chứng. Chỉ Lab 02 có log retest
-sau sửa được bàn giao; các Lab còn lại mới có kết quả phát hiện hoặc
-khảo sát cùng phương án khắc phục. Vì vậy, báo cáo không kết luận toàn
-bộ hệ thống đã được tăng cường bảo mật hoặc đã khắc phục hết lỗ hổng.
+Đề tài hoàn thành phần khảo sát và đề xuất khắc phục trong phạm vi
+đã nêu. Kết quả chưa đủ để kết luận toàn bộ hệ thống đã an toàn;
+cần tiếp tục triển khai và kiểm thử các biện pháp đề xuất.
 
 \clearpage
 \begin{thebibliography}{9}
