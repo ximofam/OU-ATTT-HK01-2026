@@ -1,12 +1,14 @@
-# Đề cương — REST API Security Assessment & Hardening
+# Đề cương — Phân tích và khai thác lỗ hổng Web
 
-**Tên tiếng Việt:** Nghiên cứu, phân tích, khai thác và tăng cường bảo mật REST API theo OWASP API Security Top 10.  
-**Tên tiếng Anh:** REST API Security Assessment and Hardening Based on OWASP API Security Top 10.  
+**Tên tiếng Việt:** Phân tích và khai thác lỗ hổng Web.
+
+**Tên tiếng Anh:** Web Vulnerability Analysis and Exploitation.
+
 **Phạm vi nhóm:** 5 thành viên, thời gian thực hiện 7 ngày.
 
 ## 1. Liên hệ đề tài được giao
 
-Đề tài giảng viên cung cấp trong ảnh: **Phân tích và khai thác lỗ hổng Web**, yêu cầu nghiên cứu và xây dựng Lab minh họa kết quả. API Security là một hướng triển khai chuyên sâu của đề tài này. Nếu giảng viên yêu cầu giữ nguyên tên hoặc danh mục công cụ, nhóm cần xác nhận lại trước khi nộp tên mới.
+Nhóm giữ nguyên tên đề tài được giao: **Phân tích và khai thác lỗ hổng Web**, với yêu cầu nghiên cứu và xây dựng Lab minh họa kết quả. Phạm vi thực nghiệm tập trung vào REST API trên OWASP crAPI, là lớp xử lý dữ liệu và nghiệp vụ phía máy chủ của ứng dụng Web.
 
 ## 2. Mục tiêu
 

@@ -1,4 +1,4 @@
-# ATTT-2026 — REST API Security Assessment & Hardening
+# ATTT-2026 — Phân tích và khai thác lỗ hổng Web
 
 Bài tập lớn An toàn thông tin: **nghiên cứu, khai thác và kiểm chứng các lỗ hổng REST API trên OWASP crAPI** theo OWASP API Security Top 10.
 

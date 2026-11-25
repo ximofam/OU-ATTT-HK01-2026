@@ -47,7 +47,7 @@
     \end{tabular}%
 }
 \newcommand{\tenGiangVien}{ThS. Lưu Quang Phương}
-\newcommand{\tenDeTai}{NGHIÊN CỨU VÀ KIỂM THỬ\\BẢO MẬT REST API\\TRÊN OWASP crAPI}
+\newcommand{\tenDeTai}{PHÂN TÍCH VÀ KHAI THÁC\\LỖ HỔNG WEB}
 \newcommand{\namBaoCao}{2026}
 \newcommand{\khungBia}{%
     \begin{tikzpicture}[remember picture,overlay]
@@ -118,6 +118,14 @@
 \label{chap:introduction}
 
 \section{Giới thiệu bài toán}
+
+Trong đề tài \textbf{Phân tích và khai thác lỗ hổng Web}, nhóm chọn
+REST API làm phạm vi thực nghiệm vì đây là thành phần xử lý dữ liệu
+và nghiệp vụ phía máy chủ của nhiều ứng dụng Web. Các lỗi xác thực,
+phân quyền hoặc kiểm soát dữ liệu tại API có thể bị khai thác bằng
+yêu cầu HTTP trực tiếp, ngay cả khi giao diện đã hạn chế thao tác.
+Hướng tiếp cận này giúp nhóm khảo sát lỗ hổng Web ở lớp API và kiểm
+chứng tác động qua các chức năng cụ thể trên OWASP crAPI.
 
 REST API tiếp nhận yêu cầu từ ứng dụng, xử lý nghiệp vụ và trả dữ
 liệu, thường qua HTTP và JSON. Máy chủ cần kiểm tra danh tính, quyền
